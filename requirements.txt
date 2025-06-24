@@ -1,0 +1,5 @@
+streamlit==1.36.0 # Ou a versão que você usa
+requests
+pandas
+numpy
+python-dotenv # Se usar para carregar variáveis de ambiente localmente
