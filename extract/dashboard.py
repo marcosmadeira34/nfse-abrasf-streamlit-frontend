@@ -576,7 +576,7 @@ with tab2:
 
                     if files_data_for_backend:
                         st.info("Enviando PDFs para processamento no backend...")
-                        print(f"Files data for backend: {files_data_for_backend.keys()}") # Debugging info
+                        
                         
                         # Use a função genérica para chamar o endpoint de upload/processamento
                         response_data = call_django_backend(
