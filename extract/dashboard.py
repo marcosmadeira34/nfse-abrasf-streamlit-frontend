@@ -90,9 +90,9 @@ def call_django_backend(endpoint: str, method: str = "POST", files_data: dict = 
         if method.upper() == "POST":
             if files_data:
                 # Transforma o dicionário files_data no formato que requests.post espera para 'files'
-                files_payload = {
-                    "files": [(name, content, "application/pdf") for name, content in files_data.items()]
-                }
+                files_payload = [
+                    ("files", (name, content, "application/pdf")) for name, content in files_data.items()
+                ]
                 response = requests.post(url, files=files_payload, headers=headers, timeout=120)
             elif json_data:
                 headers["Content-Type"] = "application/json"
