@@ -30,25 +30,6 @@ PROCESSOR_ID = os.getenv("PROCESSOR_ID")
 
 DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
 
-# --- Instância da sua classe XMLGenerator (criada uma vez) ---
-# try:
-#     xml_generator_instance = XMLGenerator()
-#     st.session_state['xml_generator_ready'] = True
-# except Exception as e:
-#     st.error(f"Erro ao inicializar XMLGenerator: {e}. Verifique se as dependências estão corretas.")
-#     st.session_state['xml_generator_ready'] = False
-#     xml_generator_instance = None # Define como None se a inicialização falhar
-
-# # --- Instância da sua classe DocumentAIProcessor (criada uma vez) ---
-# try:
-#     processor_instance = DocumentAIProcessor()
-#     st.session_state['doc_ai_processor_ready'] = True
-# except Exception as e:
-#     st.error(f"Erro ao inicializar DocumentAIProcessor: {e}. Verifique se as dependências estão corretas.")
-#     st.session_state['doc_ai_processor_ready'] = False
-#     processor_instance = None # Define como None se a inicialização falhar
-
-
 # --- Configuração da Página ---
 st.set_page_config(
     page_title="NFS-e Control - Sistema de Gerenciamento",
@@ -573,17 +554,22 @@ with tab2:
                             original_indices_map[file_path.name] = idx
                         else:
                             st.warning(f"Arquivo não encontrado: {file_path.name}. Pulando.")
+                    # DEBUG: Mostra os arquivos que serão enviados e o mapeamento de índices
+                    st.write("DEBUG - files_data_for_backend.keys():", list(files_data_for_backend.keys()))
+                    st.write("DEBUG - original_indices_map:", original_indices_map)
 
                     if files_data_for_backend:
                         st.info("Enviando PDFs para processamento no backend...")
-                        
-                        
+                        # DEBUG: Antes de chamar o backend
+                        st.write("DEBUG - Chamando call_django_backend com arquivos:", list(files_data_for_backend.keys()))
                         # Use a função genérica para chamar o endpoint de upload/processamento
                         response_data = call_django_backend(
                             endpoint="/upload-e-processar-pdf/", # ENDPOINT REAL NO SEU DJANGO para iniciar a tarefa CELERY
                             method="POST",
                             files_data=files_data_for_backend
                         )
+                        # DEBUG: Mostra a resposta do backend
+                        st.write("DEBUG - response_data:", response_data)
                         print(f"Response Data é: {response_data}")
 
                         if response_data is None:
@@ -615,7 +601,7 @@ with tab2:
                                     for task_id in st.session_state['active_task_ids']:
                                         # Consulta o status da tarefa Celery
                                         status_response = call_django_backend(
-                                            endpoint=f"/api/task-status/{task_id}/", # ENDPOINT REAL NO SEU DJANGO para status da tarefa
+                                            endpoint=f"/task-status/{task_id}/", # ENDPOINT REAL NO SEU DJANGO para status da tarefa
                                             method="GET"
                                         )
                                         
@@ -677,7 +663,7 @@ with tab2:
                                     # Tenta baixar o ZIP para cada tarefa concluída com sucesso
                                     for task_id in st.session_state['active_task_ids']:
                                         task_status_final = call_django_backend(
-                                            endpoint=f"/api/task-status/{task_id}/",
+                                            endpoint=f"/task-status/{task_id}/",
                                             method="GET"
                                         )
                                         if task_status_final and task_status_final.get("state") == "SUCCESS":
