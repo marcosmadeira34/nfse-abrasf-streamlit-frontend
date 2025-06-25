@@ -619,6 +619,8 @@ with tab2:
                                         if state == "SUCCESS":
                                             # Baixa o arquivo ZIP retornado pelo backend
                                             zip_bytes = get_zip_from_backend(task_id)
+                                            print(f"DEBUG - zip_bytes para task_id {task_id}:", zip_bytes
+                                                  )
                                             if zip_bytes:
                                                 # Oferece o botão de download
                                                 st.success("Processamento concluído com sucesso!")
