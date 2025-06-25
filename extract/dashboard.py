@@ -721,17 +721,15 @@ with tab2:
                                 progress_bar.empty()
 
                                 # Renderiza todos os botões de download para os arquivos ZIP que já foram baixados
-                                if "zip_download_ready" not in st.session_state or not st.session_state["zip_download_ready"]:
-                                    st.button("🔄 Gerando ZIP... Aguarde", disabled=True)
-                                else:
-                                    zip_info = st.session_state["zip_download_ready"]
+                                st.write("ZIPs prontos para download:", st.session_state.get('zip_download_ready', {}))
+                                for zip_id, zip_info in st.session_state['zip_download_ready'].items():
                                     st.download_button(
-                                        label="📥 Baixar XMLs em ZIP",
+                                        label=f"📥 Baixar XMLs em ZIP ({zip_info['file_name']})",
                                         data=zip_info["bytes"],
                                         file_name=zip_info["file_name"],
                                         mime="application/zip",
-                                        key=f"download_btn_{zip_info['zip_id']}"
-                                    )
+                                        key=f"download_btn_{zip_id}"
+                                 )
                                 
 
         st.subheader("Status dos PDFs Carregados:")
