@@ -617,6 +617,20 @@ with tab2:
 
                                         # Atualizar o status dos arquivos individuais se possível
                                         if state == "SUCCESS":
+                                            # Baixa o arquivo ZIP retornado pelo backend
+                                            zip_bytes = get_zip_from_backend(task_id)
+                                            if zip_bytes:
+                                                # Oferece o botão de download
+                                                st.success("Processamento concluído com sucesso!")
+                                                st.download_button(
+                                                    label="📥 Baixar XMLs em ZIP",
+                                                    data=zip_bytes,
+                                                    file_name=f"notas_fiscais_{task_id}.zip",
+                                                    mime="application/zip"
+                                                )
+                                            else:
+                                                st.error("Erro ao baixar o arquivo ZIP do backend.")
+
                                             completed_count += processed_files_in_task
                                             if errored_files_in_task:
                                                 for err_file_name in errored_files_in_task:
