@@ -673,6 +673,7 @@ with tab2:
                                                         "file_name": meta.get("zip_file_name", "resultado.zip")
                                                     }
                                                     st.session_state['downloads_feitos'].add(zip_id)
+                                                    st.experimental_rerun() 
                                                 else:
                                                     st.error(f"Falha ao baixar o ZIP da tarefa {task_id}.")
                                             elif not zip_id:
@@ -720,6 +721,7 @@ with tab2:
                                 progress_bar.empty()
 
                                 # Renderiza todos os botões de download para os arquivos ZIP que já foram baixados
+                                st.write("ZIPs prontos para download:", st.session_state.get('zip_download_ready', {}))
                                 for zip_id, zip_info in st.session_state['zip_download_ready'].items():
                                     st.download_button(
                                         label=f"📥 Baixar XMLs em ZIP ({zip_info['file_name']})",
