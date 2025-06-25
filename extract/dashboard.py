@@ -673,7 +673,9 @@ with tab2:
                                                         "file_name": meta.get("zip_file_name", "resultado.zip")
                                                     }
                                                     st.session_state['downloads_feitos'].add(zip_id)
-                                                    st.experimental_rerun() 
+                                                    from streamlit.runtime.scriptrunner import runtime
+
+                                                    raise runtime.RuntimeRerunException()
                                                 else:
                                                     st.error(f"Falha ao baixar o ZIP da tarefa {task_id}.")
                                             elif not zip_id:
