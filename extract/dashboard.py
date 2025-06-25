@@ -661,42 +661,32 @@ with tab2:
                                         errored_files_in_task = meta.get("erros", [])
 
                                         if state == "SUCCESS":
-                                            zip_id = meta.get("zip_id")
+                                            resultados = meta.get("arquivos_resultado", {})
 
-                                            # Se não baixou ainda este zip, baixa e armazena no session_state
-                                            if zip_id and zip_id not in st.session_state['downloads_feitos']:
-                                                zip_bytes = call_django_backend_zip_bytes(f"/download-zip/{zip_id}/")
+                                            for file_name, resultado in resultados.items():
+                                                idx = original_indices_map.get(file_name)
+
+                                                if resultado.get("status") == "ok":
+                                                    xml_str = resultado.get("xml", "")
                                                     
-                                                if zip_bytes:
-                                                    st.session_state['zip_download_ready'][zip_id] = {
-                                                        "bytes": zip_bytes,
-                                                        "file_name": meta.get("zip_file_name", "resultado.zip")
-                                                    }
-                                                    st.session_state['downloads_feitos'].add(zip_id)
-                                                    
+                                                    # Atualiza o status na interface
+                                                    if idx is not None:
+                                                        st.session_state.uploaded_files_info[idx]["Status"] = "Concluído"
+                                                        st.session_state.uploaded_files_info[idx]["XML Gerado"] = "Sim"
+                                                        st.session_state.uploaded_files_info[idx]["Detalhes"] = "Processado com sucesso"
+
+                                                    # Guarda o XML no session_state para download
+                                                    st.session_state.setdefault('xmls_gerados', {})[file_name] = xml_str
+
                                                 else:
-                                                    st.error(f"Falha ao baixar o ZIP da tarefa {task_id}.")
-                                            elif not zip_id:
-                                                st.error("O backend não retornou o ID do arquivo ZIP.")
-
-                                            # Atualiza status dos arquivos
-                                            completed_count += processed_files_in_task
-
-                                            processed_summary = meta.get("processed_files_summary", {})
-                                            for file_name, status_msg in processed_summary.items():
-                                                if file_name in original_indices_map:
-                                                    idx = original_indices_map[file_name]
-                                                    st.session_state.uploaded_files_info[idx]["Status"] = "Concluído"
-                                                    st.session_state.uploaded_files_info[idx]["XML Gerado"] = "Sim"
-                                                    st.session_state.uploaded_files_info[idx]["Detalhes"] = status_msg
-
-                                            if errored_files_in_task:
-                                                for err_file_name in errored_files_in_task:
-                                                    if err_file_name in original_indices_map:
-                                                        idx = original_indices_map[err_file_name]
+                                                    erro_msg = resultado.get("erro", "Erro desconhecido")
+                                                    if idx is not None:
                                                         st.session_state.uploaded_files_info[idx]["Status"] = "Erro"
-                                                        st.session_state.uploaded_files_info[idx]["Detalhes"] = f"Erro no backend: {meta.get('error', 'Erro desconhecido')}"
                                                         st.session_state.uploaded_files_info[idx]["XML Gerado"] = "Não"
+                                                        st.session_state.uploaded_files_info[idx]["Detalhes"] = erro_msg
+                                                    st.error(f"Erro ao processar {file_name}: {erro_msg}")
+
+                                            completed_count += processed_files_in_task
 
                                         elif state in ["PENDING", "PROGRESS"]:
                                             all_tasks_completed = False
@@ -711,26 +701,26 @@ with tab2:
                                             all_tasks_completed = True
                                             completed_count += total_files_in_tasks
 
-                                    # Atualiza a barra de progresso
-                                    current_progress = min(1.0, completed_count / total_files_in_tasks) if total_files_in_tasks > 0 else 0
-                                    progress_bar.progress(current_progress)
+                                        # Atualiza a barra de progresso
+                                        current_progress = min(1.0, completed_count / total_files_in_tasks) if total_files_in_tasks > 0 else 0
+                                        progress_bar.progress(current_progress)
 
-                                    if not all_tasks_completed:
-                                        time.sleep(2)
+                                        if not all_tasks_completed:
+                                            time.sleep(2)
 
-                                progress_bar.empty()
+                                        progress_bar.empty()
 
-                                # Renderiza todos os botões de download para os arquivos ZIP que já foram baixados
-                                st.write("ZIPs prontos para download:", st.session_state.get('zip_download_ready', {}))
-                                for zip_id, zip_info in st.session_state['zip_download_ready'].items():
-                                    st.download_button(
-                                        label=f"📥 Baixar XMLs em ZIP ({zip_info['file_name']})",
-                                        data=zip_info["bytes"],
-                                        file_name=zip_info["file_name"],
-                                        mime="application/zip",
-                                        key=f"download_btn_{zip_id}"
-                                 )
-                                
+                                        # Renderiza os botões de download para cada XML gerado
+                                        st.subheader("📄 XMLs prontos para download")
+                                        for file_name, xml_str in st.session_state.get('xmls_gerados', {}).items():
+                                            st.download_button(
+                                                label=f"📥 Baixar XML - {file_name.replace('.pdf', '.xml')}",
+                                                data=xml_str,
+                                                file_name=file_name.replace('.pdf', '.xml'),
+                                                mime="application/xml",
+                                                key=f"download_btn_{file_name}"
+                                            )
+                                                                        
 
         st.subheader("Status dos PDFs Carregados:")
         st.dataframe(df_files[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
