@@ -48,21 +48,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 XML_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def streamlit_rerun():
-    try:
-        import streamlit as st
-        st.experimental_rerun()
-    except AttributeError:
-        try:
-            from streamlit.errors import RerunException
-            raise RerunException()
-        except ImportError:
-            try:
-                from streamlit.runtime.scriptrunner.script_runner import RerunException
-                raise RerunException()
-            except ImportError:
-                import sys
-                sys.exit("Não foi possível executar rerun no Streamlit: versão incompatível.")
+
 
 
 # --- Função Genérica de Comunicação com o Backend Django ---
@@ -441,8 +427,6 @@ def process_pdfs_and_send_to_api(uploaded_pdfs: list) -> tuple[bool, str]:
         return False, f"❌ {success_count} XML(s) enviados com sucesso, {fail_count} falharam no envio."
 
 
-
-
 # --- FUNÇÃO PARA PEGAR O STATUS E RESULTADO DA TAREFA CELERY ---
 def get_celery_task_status(task_id: str):
     """
@@ -689,7 +673,7 @@ with tab2:
                                                         "file_name": meta.get("zip_file_name", "resultado.zip")
                                                     }
                                                     st.session_state['downloads_feitos'].add(zip_id)
-                                                    streamlit_rerun()
+                                                    
                                                 else:
                                                     st.error(f"Falha ao baixar o ZIP da tarefa {task_id}.")
                                             elif not zip_id:
@@ -745,8 +729,17 @@ with tab2:
                                         file_name=zip_info["file_name"],
                                         mime="application/zip",
                                         key=f"download_btn_{zip_id}"
-                                    )
-                                
+                                 )
+
+        st.write("ZIPs prontos para download:", st.session_state.get('zip_download_ready', {}))
+        for zip_id, zip_info in st.session_state['zip_download_ready'].items():
+            st.download_button(
+                label=f"📥 Baixar XMLs em ZIP ({zip_info['file_name']})",
+                data=zip_info["bytes"],
+                file_name=zip_info["file_name"],
+                mime="application/zip",
+                key=f"download_btn_{zip_id}"
+            )                        
 
         st.subheader("Status dos PDFs Carregados:")
         st.dataframe(df_files[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
