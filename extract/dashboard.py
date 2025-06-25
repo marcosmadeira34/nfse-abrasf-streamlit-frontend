@@ -48,6 +48,22 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 XML_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def streamlit_rerun():
+    try:
+        import streamlit as st
+        st.experimental_rerun()
+    except AttributeError:
+        try:
+            from streamlit.errors import RerunException
+            raise RerunException()
+        except ImportError:
+            try:
+                from streamlit.runtime.scriptrunner.script_runner import RerunException
+                raise RerunException()
+            except ImportError:
+                import sys
+                sys.exit("Não foi possível executar rerun no Streamlit: versão incompatível.")
+
 
 # --- Função Genérica de Comunicação com o Backend Django ---
 def call_django_backend(endpoint: str, method: str = "POST", 
@@ -673,9 +689,7 @@ with tab2:
                                                         "file_name": meta.get("zip_file_name", "resultado.zip")
                                                     }
                                                     st.session_state['downloads_feitos'].add(zip_id)
-                                                    from streamlit.runtime.scriptrunner import runtime
-
-                                                    raise runtime.RuntimeRerunException()
+                                                    streamlit_rerun()
                                                 else:
                                                     st.error(f"Falha ao baixar o ZIP da tarefa {task_id}.")
                                             elif not zip_id:
