@@ -746,20 +746,7 @@ with tab2:
                 unsafe_allow_html=True
             )
                                 
-            # 🔥 Limpeza dos arquivos PDF concluídos
-            removed_count = 0
-            for info in st.session_state.uploaded_files_info:
-                if info["Status"] == "Concluído":
-                    file_path = Path(info["Caminho"])
-                    if file_path.exists():
-                        try:
-                            file_path.unlink()
-                            info["Caminho"] = "-"
-                            removed_count += 1
-                        except Exception as e:
-                            st.warning(f"Erro ao remover {file_path.name}: {e}")
-            if removed_count > 0:
-                st.success(f"{removed_count} PDF(s) concluído(s) foram removidos da pasta de uploads.")
+            
         
         pdfs_ready = [info for info in st.session_state.uploaded_files_info if Path(info["Caminho"]).exists()]
         if pdfs_ready:
