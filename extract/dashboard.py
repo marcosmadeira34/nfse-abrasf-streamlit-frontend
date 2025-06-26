@@ -13,6 +13,7 @@ import base64
 import requests
 import io
 import zipfile
+import uuid
 
 # --- Suas importações existentes ---
 #from services import XMLGenerator
@@ -521,27 +522,24 @@ with tab1:
         )
 
         if uploaded_files:
-            new_uploads_count = 0
             for f in uploaded_files:
-                # Gere um nome de arquivo único usando timestamp e um número aleatório
-                timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
-                random_suffix = random.randint(1000, 9999)
-                unique_name = f"{Path(f.name).stem}_{timestamp}_{random_suffix}{Path(f.name).suffix}"
+                unique_name = f"{Path(f.name).stem}_{uuid.uuid4().hex[:8]}.pdf"
                 file_path = UPLOAD_DIR / unique_name
+
                 with open(file_path, "wb") as out:
                     out.write(f.read())
+
                 st.session_state.uploaded_files_info.append({
-                    "Nome do Arquivo": unique_name,
+                    "Nome do Arquivo": f.name,
                     "Caminho": str(file_path),
                     "Status": "Carregado",
                     "XML Gerado": "-",
                     "Status Envio": "-",
                     "Detalhes": ""
                 })
-                new_uploads_count += 1
-
-            if new_uploads_count > 0:
-                st.success(f"{new_uploads_count} arquivo(s) novo(s) salvo(s) com sucesso!")
+                
+            # if new_uploads_count > 0:
+            #     st.success(f"{new_uploads_count} arquivo(s) novo(s) salvo(s) com sucesso!")
 
 # --- TAB 2: Revisar & Converter ---
 with tab2:
@@ -748,20 +746,7 @@ with tab2:
                 """,
                 unsafe_allow_html=True
             )
-            # 🔥 Limpeza dos arquivos PDF concluídos
-            removed_count = 0
-            for info in st.session_state.uploaded_files_info:
-                if info["Status"] == "Concluído":
-                    file_path = Path(info["Caminho"])
-                    if file_path.exists():
-                        try:
-                            file_path.unlink()
-                            info["Caminho"] = "-"
-                            removed_count += 1
-                        except Exception as e:
-                            st.warning(f"Erro ao remover {file_path.name}: {e}")
-            if removed_count > 0:
-                st.success(f"{removed_count} PDF(s) concluído(s) foram removidos da pasta de uploads.")
+            
 
         # 🔍 Atualiza a visualização apenas com arquivos que ainda existem
         pdfs_ready = [info for info in st.session_state.uploaded_files_info if Path(info["Caminho"]).exists()]
