@@ -729,8 +729,10 @@ with tab2:
 
                                 progress_bar.empty()
         
-                                st.subheader("Status dos PDFs Carregados:")
-                                st.dataframe(df_files[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
+        # Recria o DataFrame com os dados atualizados após o processamento
+        st.subheader("Status dos PDFs Carregados:")
+        df_files_updated = pd.DataFrame(st.session_state.uploaded_files_info)
+        st.dataframe(df_files_updated[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
 
         # Botões de download permanentes:
         if st.session_state.get('xmls_gerados'):
