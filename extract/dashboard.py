@@ -550,7 +550,6 @@ with tab2:
         st.info("Nenhum PDF carregado ainda. Volte para a aba 'Importar PDFs'.")
     else:
         df_files = pd.DataFrame(st.session_state.uploaded_files_info)
-        # Filtra arquivos que ainda não foram processados ou falharam
         df_to_process = df_files[~df_files['Status'].isin(['Concluído', 'Erro'])]
 
         if not df_to_process.empty:
@@ -559,10 +558,7 @@ with tab2:
             all_options = df_to_process.index.tolist()
             select_all = st.checkbox("Marcar/Desmarcar Todos", key="checkbox_select_all_convert")
 
-            if select_all:
-                default_selection = all_options
-            else:
-                default_selection = []
+            default_selection = all_options if select_all else []
 
             selected_files_indices = st.multiselect(
                 "Selecione os PDFs para converter:",
@@ -576,7 +572,8 @@ with tab2:
                 if selected_files_indices:
                     st.info("Preparando arquivos para envio...")
                     files_data_for_backend = {}
-                    original_indices_map = {} # Mapeia file_name para o índice original no session_state
+                    original_indices_map = {}
+
                     for idx in selected_files_indices:
                         file_info = st.session_state.uploaded_files_info[idx]
                         file_path = Path(file_info["Caminho"])
@@ -586,64 +583,52 @@ with tab2:
                             original_indices_map[file_path.name] = idx
                         else:
                             st.warning(f"Arquivo não encontrado: {file_path.name}. Pulando.")
-                    # DEBUG: Mostra os arquivos que serão enviados e o mapeamento de índices
-                    #st.write("DEBUG - files_data_for_backend.keys():", list(files_data_for_backend.keys()))
-                    #st.write("DEBUG - original_indices_map:", original_indices_map)
 
                     if files_data_for_backend:
                         st.info("Enviando PDFs para processamento no backend...")
-                        # DEBUG: Antes de chamar o backend
-                        #st.write("DEBUG - Chamando call_django_backend com arquivos:", list(files_data_for_backend.keys()))
-                        # Use a função genérica para chamar o endpoint de upload/processamento
                         response_data = call_django_backend(
-                            endpoint="/upload-e-processar-pdf/", # ENDPOINT REAL NO SEU DJANGO para iniciar a tarefa CELERY
+                            endpoint="/upload-e-processar-pdf/",
                             method="POST",
                             files_data=files_data_for_backend
                         )
-                        # DEBUG: Mostra a resposta do backend
-                        #st.write("DEBUG - response_data:", response_data)
-                        print(f"Response Data é: {response_data}")
 
                         if response_data is None:
-                            st.error("Falha na comunicação com o backend para iniciar o processamento. Verifique logs.")
+                            st.error("Falha na comunicação com o backend.")
                         else:
-                            task_ids = response_data.get('task_ids', [])
-                            error_message = response_data.get('error', None) # Se o backend retornar um campo 'error'
+                            task_ids = response_data.get("task_ids", [])
+                            error_message = response_data.get("error")
 
                             if error_message:
-                                st.error(f"Falha ao iniciar processamento: {error_message}")
+                                st.error(f"Erro ao iniciar processamento: {error_message}")
                             elif task_ids:
                                 st.success(f"Processamento iniciado para {len(task_ids)} lote(s).")
                                 st.session_state['active_task_ids'] = task_ids
-                                # Atualiza o status no Streamlit para 'Processando'
+
                                 for file_name, original_idx in original_indices_map.items():
                                     st.session_state.uploaded_files_info[original_idx]["Status"] = "Processando"
-                                    st.session_state.uploaded_files_info[original_idx]["Detalhes"] = "Aguardando resultado do backend..."
+                                    st.session_state.uploaded_files_info[original_idx]["Detalhes"] = "Aguardando backend..."
 
-                                # Agora, entraremos em um loop para consultar o status
                                 st.subheader("Verificando status do processamento...")
                                 progress_bar = st.progress(0)
                                 all_tasks_completed = False
-                                start_time = time.time()
-                                total_files_in_tasks = len(files_data_for_backend) # Total de arquivos que foram enviados
+                                total_files = len(files_data_for_backend)
+                                processed_files = 0
 
-                                # Inicializações obrigatórias no início da aba/função
                                 if 'downloads_feitos' not in st.session_state:
                                     st.session_state['downloads_feitos'] = set()
 
-                                if 'zip_download_ready' not in st.session_state:
-                                    st.session_state['zip_download_ready'] = {}
+                                if 'xmls_gerados' not in st.session_state:
+                                    st.session_state['xmls_gerados'] = {}
 
-                                # Loop principal de polling para verificar status das tasks
+                                if 'zip_id' not in st.session_state:
+                                    st.session_state['zip_id'] = ""
+
                                 start_time = time.time()
-                                timeout_seconds = 300  # 5 minutos
-                                all_tasks_completed = False
-
-                                progress_bar = st.progress(0)
+                                timeout_seconds = 300
 
                                 while not all_tasks_completed and (time.time() - start_time < timeout_seconds):
                                     all_tasks_completed = True
-                                    completed_count = 0
+                                    processed_count = 0
 
                                     for task_id in st.session_state['active_task_ids']:
                                         status_response = call_django_backend(
@@ -651,70 +636,65 @@ with tab2:
                                             method="GET"
                                         )
 
-                                        if status_response is None:
-                                            state = "UNKNOWN"
-                                            meta = {"error": "Erro ao obter status da tarefa."}
-                                        else:
-                                            state = status_response.get("state")
-                                            meta = status_response.get("meta", {})
+                                        if not status_response:
+                                            continue
 
-                                        processed_files_in_task = meta.get("processed", 0)
-                                        errored_files_in_task = meta.get("erros", [])
+                                        state = status_response.get("state")
+                                        meta = status_response.get("meta", {})
 
-                                        
                                         if state == "SUCCESS":
                                             resultados = meta.get("arquivos_resultado", {})
+                                            zip_path = meta.get("zip_path", "")
 
                                             for file_name, resultado in resultados.items():
                                                 idx = original_indices_map.get(file_name)
-
                                                 if resultado.get("status") == "ok":
-                                                    xml_str = resultado.get("xml", "")
-
-                                                    # Atualiza o status na interface
-                                                    if idx is not None:
-                                                        st.session_state.uploaded_files_info[idx]["Status"] = "Concluído"
-                                                        st.session_state.uploaded_files_info[idx]["XML Gerado"] = "Sim"
-                                                        st.session_state.uploaded_files_info[idx]["Detalhes"] = "Processado com sucesso"
-
-                                                    # Guarda o XML no session_state para download
-                                                    st.session_state.setdefault('xmls_gerados', {})[file_name] = xml_str
-
+                                                    xml_str = resultado.get("xml")
+                                                    st.session_state.xmls_gerados[file_name] = xml_str
+                                                    st.session_state.uploaded_files_info[idx]["Status"] = "Concluído"
+                                                    st.session_state.uploaded_files_info[idx]["XML Gerado"] = "Sim"
+                                                    st.session_state.uploaded_files_info[idx]["Detalhes"] = "Processado com sucesso"
                                                 else:
                                                     erro_msg = resultado.get("erro", "Erro desconhecido")
-                                                    if idx is not None:
-                                                        st.session_state.uploaded_files_info[idx]["Status"] = "Erro"
-                                                        st.session_state.uploaded_files_info[idx]["XML Gerado"] = "Não"
-                                                        st.session_state.uploaded_files_info[idx]["Detalhes"] = erro_msg
+                                                    st.session_state.uploaded_files_info[idx]["Status"] = "Erro"
+                                                    st.session_state.uploaded_files_info[idx]["XML Gerado"] = "Não"
+                                                    st.session_state.uploaded_files_info[idx]["Detalhes"] = erro_msg
                                                     st.error(f"Erro ao processar {file_name}: {erro_msg}")
 
-                                            # 👇 ESTA PARTE AGORA FICA FORA DO LOOP
-                                            zip_id = meta.get('zip_id')
-                                            if zip_id:
-                                                st.session_state['zip_id'] = zip_id
-                                            completed_count += processed_files_in_task
+                                                # ✅ DELETAR PDF APÓS CONVERSÃO
+                                                caminho = Path(st.session_state.uploaded_files_info[idx]["Caminho"])
+                                                if caminho.exists():
+                                                    try:
+                                                        caminho.unlink()
+                                                        st.session_state.uploaded_files_info[idx]["Detalhes"] += " | PDF removido"
+                                                    except Exception as e:
+                                                        st.warning(f"Erro ao remover PDF {caminho.name}: {e}")
 
+                                            if zip_path:
+                                                st.session_state['zip_id'] = Path(zip_path).stem
+
+                                            processed_count += len(resultados)
                                         elif state in ["PENDING", "PROGRESS"]:
                                             all_tasks_completed = False
-                                            completed_count += processed_files_in_task
-
-                                        elif state in ["FAILURE", "UNKNOWN"]:
-                                            for file_name, original_idx in original_indices_map.items():
-                                                if st.session_state.uploaded_files_info[original_idx]["Status"] != "Concluído":
-                                                    st.session_state.uploaded_files_info[original_idx]["Status"] = "Erro"
-                                                    st.session_state.uploaded_files_info[original_idx]["Detalhes"] = f"Falha na tarefa Celery: {meta.get('error', 'Erro desconhecido')}"
-                                                    st.session_state.uploaded_files_info[original_idx]["XML Gerado"] = "Não"
+                                        else:
                                             all_tasks_completed = True
-                                            completed_count += total_files_in_tasks
 
-                                    # Atualiza a barra de progresso
-                                    current_progress = min(1.0, completed_count / total_files_in_tasks) if total_files_in_tasks > 0 else 0
-                                    progress_bar.progress(current_progress)
+                                        progress_bar.progress(min(1.0, processed_count / total_files))
 
                                     if not all_tasks_completed:
                                         time.sleep(2)
 
                                 progress_bar.empty()
+
+                                st.markdown("### 📄 XMLs prontos para download:")
+                                for file_name, xml_str in st.session_state.xmls_gerados.items():
+                                    st.download_button(
+                                        label=f"📥 Baixar XML - {file_name.replace('.pdf', '.xml')}",
+                                        data=xml_str,
+                                        file_name=file_name.replace(".pdf", ".xml"),
+                                        mime="application/xml",
+                                        key=f"download_btn_{file_name}"
+                                    )
         
         st.subheader("Status dos PDFs Carregados:")
         st.dataframe(df_files[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
