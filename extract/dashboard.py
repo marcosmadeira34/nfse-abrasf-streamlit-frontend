@@ -69,7 +69,7 @@ def call_django_backend(endpoint: str, method: str = "POST",
     url = f"{DJANGO_BACKEND_URL}{endpoint}"
     headers = {}
 
-    st.sidebar.markdown(f"**Chamando:** `{method.upper()}` `{url}`")
+    #st.sidebar.markdown(f"**Chamando:** `{method.upper()}` `{url}`")
 
     try:
         response = None
@@ -125,7 +125,7 @@ def call_django_backend(endpoint: str, method: str = "POST",
 def call_django_backend_zip_bytes(endpoint: str, method: str = "GET") -> bytes | None:
     url = f"{DJANGO_BACKEND_URL}{endpoint}"
     headers = {}
-    st.sidebar.markdown(f"**Chamando:** `{method.upper()}` `{url}`")
+    #st.sidebar.markdown(f"**Chamando:** `{method.upper()}` `{url}`")
 
     try:
         if method.upper() == "GET":
@@ -586,13 +586,13 @@ with tab2:
                         else:
                             st.warning(f"Arquivo não encontrado: {file_path.name}. Pulando.")
                     # DEBUG: Mostra os arquivos que serão enviados e o mapeamento de índices
-                    st.write("DEBUG - files_data_for_backend.keys():", list(files_data_for_backend.keys()))
-                    st.write("DEBUG - original_indices_map:", original_indices_map)
+                    #st.write("DEBUG - files_data_for_backend.keys():", list(files_data_for_backend.keys()))
+                    #st.write("DEBUG - original_indices_map:", original_indices_map)
 
                     if files_data_for_backend:
                         st.info("Enviando PDFs para processamento no backend...")
                         # DEBUG: Antes de chamar o backend
-                        st.write("DEBUG - Chamando call_django_backend com arquivos:", list(files_data_for_backend.keys()))
+                        #st.write("DEBUG - Chamando call_django_backend com arquivos:", list(files_data_for_backend.keys()))
                         # Use a função genérica para chamar o endpoint de upload/processamento
                         response_data = call_django_backend(
                             endpoint="/upload-e-processar-pdf/", # ENDPOINT REAL NO SEU DJANGO para iniciar a tarefa CELERY
@@ -600,7 +600,7 @@ with tab2:
                             files_data=files_data_for_backend
                         )
                         # DEBUG: Mostra a resposta do backend
-                        st.write("DEBUG - response_data:", response_data)
+                        #st.write("DEBUG - response_data:", response_data)
                         print(f"Response Data é: {response_data}")
 
                         if response_data is None:
@@ -660,6 +660,7 @@ with tab2:
                                         processed_files_in_task = meta.get("processed", 0)
                                         errored_files_in_task = meta.get("erros", [])
 
+                                        
                                         if state == "SUCCESS":
                                             resultados = meta.get("arquivos_resultado", {})
 
@@ -668,7 +669,7 @@ with tab2:
 
                                                 if resultado.get("status") == "ok":
                                                     xml_str = resultado.get("xml", "")
-                                                    
+
                                                     # Atualiza o status na interface
                                                     if idx is not None:
                                                         st.session_state.uploaded_files_info[idx]["Status"] = "Concluído"
@@ -686,6 +687,10 @@ with tab2:
                                                         st.session_state.uploaded_files_info[idx]["Detalhes"] = erro_msg
                                                     st.error(f"Erro ao processar {file_name}: {erro_msg}")
 
+                                            # 👇 ESTA PARTE AGORA FICA FORA DO LOOP
+                                            zip_id = meta.get('zip_id')
+                                            if zip_id:
+                                                st.session_state['zip_id'] = zip_id
                                             completed_count += processed_files_in_task
 
                                         elif state in ["PENDING", "PROGRESS"]:
@@ -701,36 +706,48 @@ with tab2:
                                             all_tasks_completed = True
                                             completed_count += total_files_in_tasks
 
-                                        # Atualiza a barra de progresso
-                                        current_progress = min(1.0, completed_count / total_files_in_tasks) if total_files_in_tasks > 0 else 0
-                                        progress_bar.progress(current_progress)
+                                    # Atualiza a barra de progresso
+                                    current_progress = min(1.0, completed_count / total_files_in_tasks) if total_files_in_tasks > 0 else 0
+                                    progress_bar.progress(current_progress)
 
-                                        if not all_tasks_completed:
-                                            time.sleep(2)
+                                    if not all_tasks_completed:
+                                        time.sleep(2)
 
-                                        progress_bar.empty()
-
-                                        # Renderiza os botões de download para cada XML gerado
-                                        st.subheader("📄 XMLs prontos para download")
-                                        for file_name, xml_str in st.session_state.get('xmls_gerados', {}).items():
-                                            st.download_button(
-                                                label=f"📥 Baixar XML - {file_name.replace('.pdf', '.xml')}",
-                                                data=xml_str,
-                                                file_name=file_name.replace('.pdf', '.xml'),
-                                                mime="application/xml",
-                                                key=f"download_btn_{file_name}"
-                                            )
-                                                                        
-
+                                progress_bar.empty()
+        
         st.subheader("Status dos PDFs Carregados:")
         st.dataframe(df_files[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
 
-        # A visualização de PDF e XML agora precisa ser mais dinâmica.
-        # Você não tem mais os dados_extraidos diretamente aqui.
-        # Você pode:
-        # 1. Armazenar os XMLs (após download do ZIP) localmente no Streamlit para visualização.
-        # 2. Se o backend puder expor um endpoint para retornar o XML de um arquivo específico (mais complexo).
-        # Por simplicidade, vamos apenas mostrar o status.
+        # Botões de download permanentes:
+        if st.session_state.get('xmls_gerados'):
+            st.markdown("### 📄 XMLs Gerados:")
+            for file_name, xml_str in st.session_state['xmls_gerados'].items():
+                st.download_button(
+                    label=f"📅 Baixar XML - {file_name.replace('.pdf', '.xml')}",
+                    data=xml_str,
+                    file_name=file_name.replace('.pdf', '.xml'),
+                    mime="application/xml",
+                    key=f"download_btn_{file_name}_{hash(xml_str)}"
+                )
+
+        if 'zip_id' in st.session_state:
+            st.markdown("### 📦 Baixar todos os XMLs em um único ZIP")
+            # Remove a extensão .zip do ID
+            download_url = f"{DJANGO_BACKEND_URL}/download-zip/{st.session_state['zip_id']}/"
+
+            st.markdown(
+                f"""
+                <a href="{download_url}" target="_blank">
+                    <button style="background-color:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;">
+                        📅 Baixar ZIP
+                    </button>
+                </a>
+                """,
+                unsafe_allow_html=True
+            )
+                                
+       
+        
         pdfs_ready = [info for info in st.session_state.uploaded_files_info if Path(info["Caminho"]).exists()]
         if pdfs_ready:
             selected_pdf_name = st.selectbox(
