@@ -825,7 +825,7 @@ with tab3:
 
     if not xmls_to_send_info:
         st.info("Nenhum XML pronto para envio ou todos já foram enviados.")
-        st.write("Entre em contato com o desenvolvedor para implementar a lógica de envio real.")
+        st.info("Entre em contato com o desenvolvedor para implementar a lógica de envio real.")
     else:
         df_xmls_to_send = pd.DataFrame(xmls_to_send_info)
 
