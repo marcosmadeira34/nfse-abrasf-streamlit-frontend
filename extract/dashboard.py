@@ -523,22 +523,29 @@ with tab1:
         if uploaded_files:
             new_uploads_count = 0
             for f in uploaded_files:
-                file_path = UPLOAD_DIR / f.name
-                if not file_path.exists():
-                    with open(file_path, "wb") as out:
-                        out.write(f.read())
-                    st.session_state.uploaded_files_info.append({
-                        "Nome do Arquivo": f.name,
-                        "Caminho": str(file_path),
-                        "Status": "Carregado",
-                        "XML Gerado": "-",
-                        "Status Envio": "-",
-                        "Detalhes": ""
-                    })
-                    new_uploads_count += 1
-                
+                # Cria um nome de arquivo único baseado no tempo
+                unique_suffix = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
+                file_stem = Path(f.name).stem
+                file_ext = Path(f.name).suffix
+                unique_name = f"{file_stem}_{unique_suffix}{file_ext}"
+
+                file_path = UPLOAD_DIR / unique_name
+
+                with open(file_path, "wb") as out:
+                    out.write(f.read())
+
+                st.session_state.uploaded_files_info.append({
+                    "Nome do Arquivo": f.name,
+                    "Caminho": str(file_path),
+                    "Status": "Carregado",
+                    "XML Gerado": "-",
+                    "Status Envio": "-",
+                    "Detalhes": ""
+                })
+                new_uploads_count += 1
+
             if new_uploads_count > 0:
-                st.success(f"{new_uploads_count} arquivo(s) novo(s) salvo(s) com sucesso!")
+                st.success(f"{new_uploads_count} arquivo(s) salvo(s) com sucesso!")
 
 # --- TAB 2: Revisar & Converter ---
 with tab2:
@@ -745,9 +752,22 @@ with tab2:
                 """,
                 unsafe_allow_html=True
             )
-                                
-            
-        
+            # 🔥 Limpeza dos arquivos PDF concluídos
+            removed_count = 0
+            for info in st.session_state.uploaded_files_info:
+                if info["Status"] == "Concluído":
+                    file_path = Path(info["Caminho"])
+                    if file_path.exists():
+                        try:
+                            file_path.unlink()
+                            info["Caminho"] = "-"
+                            removed_count += 1
+                        except Exception as e:
+                            st.warning(f"Erro ao remover {file_path.name}: {e}")
+            if removed_count > 0:
+                st.success(f"{removed_count} PDF(s) concluído(s) foram removidos da pasta de uploads.")
+
+        # 🔍 Atualiza a visualização apenas com arquivos que ainda existem
         pdfs_ready = [info for info in st.session_state.uploaded_files_info if Path(info["Caminho"]).exists()]
         if pdfs_ready:
             selected_pdf_name = st.selectbox(
@@ -771,10 +791,39 @@ with tab2:
                     st.info(f"Status: {selected_pdf_info['Status']}")
                     st.info(f"XML Gerado: {selected_pdf_info['XML Gerado']}")
                     st.info(f"Detalhes: {selected_pdf_info['Detalhes']}")
-                    
 
         else:
             st.info("Nenhum PDF disponível para visualização.")
+                                
+            
+        
+        # pdfs_ready = [info for info in st.session_state.uploaded_files_info if Path(info["Caminho"]).exists()]
+        # if pdfs_ready:
+        #     selected_pdf_name = st.selectbox(
+        #         "Selecione um PDF para visualizar status:",
+        #         options=[info["Nome do Arquivo"] for info in pdfs_ready],
+        #         format_func=lambda x: x,
+        #         key="selectbox_view_pdf"
+        #     )
+        #     if selected_pdf_name:
+        #         selected_pdf_info = next(info for info in pdfs_ready if info["Nome do Arquivo"] == selected_pdf_name)
+        #         selected_pdf_path = Path(selected_pdf_info["Caminho"])
+
+        #         col_pdf, col_data = st.columns([1, 1])
+
+        #         with col_pdf:
+        #             st.markdown(f"**Visualizando PDF:** `{selected_pdf_name}`")
+        #             st.components.v1.iframe(str(selected_pdf_path.as_posix()), height=600, scrolling=True)
+
+        #         with col_data:
+        #             st.markdown(f"**Status de Processamento:**")
+        #             st.info(f"Status: {selected_pdf_info['Status']}")
+        #             st.info(f"XML Gerado: {selected_pdf_info['XML Gerado']}")
+        #             st.info(f"Detalhes: {selected_pdf_info['Detalhes']}")
+                    
+
+        # else:
+        #     st.info("Nenhum PDF disponível para visualização.")
 
 # --- TAB 3: Enviar para API ---
 with tab3:
