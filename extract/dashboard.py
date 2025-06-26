@@ -13,6 +13,7 @@ import base64
 import requests
 import io
 import zipfile
+import datetime
 
 # --- Suas importações existentes ---
 #from services import XMLGenerator
@@ -508,7 +509,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["📥 Importar PDFs", "🔍 Revisar & Converte
 
 # --- TAB 1: Importar PDFs ---
 with tab1:
-    st.header("Passo 1: Importar Notas em PDF")
+    st.header("Importar Notas em PDF")
     st.markdown("Arraste e solte seus arquivos PDF ou use o botão para selecioná-los.")
 
     with st.expander("⬆️ Enviar arquivos PDF"):
