@@ -13,7 +13,6 @@ import base64
 import requests
 import io
 import zipfile
-import datetime
 
 # --- Suas importações existentes ---
 #from services import XMLGenerator
@@ -509,7 +508,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["📥 Importar PDFs", "🔍 Revisar & Converte
 
 # --- TAB 1: Importar PDFs ---
 with tab1:
-    st.header("Importar Notas em PDF")
+    st.header("Passo 1: Importar Notas em PDF")
     st.markdown("Arraste e solte seus arquivos PDF ou use o botão para selecioná-los.")
 
     with st.expander("⬆️ Enviar arquivos PDF"):
@@ -524,19 +523,15 @@ with tab1:
         if uploaded_files:
             new_uploads_count = 0
             for f in uploaded_files:
-                # Cria um nome de arquivo único baseado no tempo
-                unique_suffix = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
-                file_stem = Path(f.name).stem
-                file_ext = Path(f.name).suffix
-                unique_name = f"{file_stem}_{unique_suffix}{file_ext}"
-
+                # Gere um nome de arquivo único usando timestamp e um número aleatório
+                timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
+                random_suffix = random.randint(1000, 9999)
+                unique_name = f"{Path(f.name).stem}_{timestamp}_{random_suffix}{Path(f.name).suffix}"
                 file_path = UPLOAD_DIR / unique_name
-
                 with open(file_path, "wb") as out:
                     out.write(f.read())
-
                 st.session_state.uploaded_files_info.append({
-                    "Nome do Arquivo": f.name,
+                    "Nome do Arquivo": unique_name,
                     "Caminho": str(file_path),
                     "Status": "Carregado",
                     "XML Gerado": "-",
@@ -546,7 +541,7 @@ with tab1:
                 new_uploads_count += 1
 
             if new_uploads_count > 0:
-                st.success(f"{new_uploads_count} arquivo(s) salvo(s) com sucesso!")
+                st.success(f"{new_uploads_count} arquivo(s) novo(s) salvo(s) com sucesso!")
 
 # --- TAB 2: Revisar & Converter ---
 with tab2:
