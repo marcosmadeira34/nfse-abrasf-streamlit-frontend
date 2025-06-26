@@ -572,6 +572,34 @@ with tab2:
                 format_func=lambda x: df_to_process.loc[x, "Nome do Arquivo"] + f" ({df_to_process.loc[x, 'Status']})",
                 key="multiselect_convert_pdfs"
             )
+            # Botão de exclusão de PDFs selecionados
+            if selected_files_indices:
+                if st.button("🗑️ Excluir PDFs Selecionados"):
+                    arquivos_removidos = 0
+
+                    # Copia a lista para evitar problemas durante a iteração
+                    arquivos_atuais = st.session_state.uploaded_files_info.copy()
+
+                    for idx in selected_files_indices:
+                        try:
+                            info = df_to_process.loc[idx]
+                            caminho_arquivo = Path(info["Caminho"])
+
+                            # Remove o arquivo do disco
+                            if caminho_arquivo.exists():
+                                caminho_arquivo.unlink()
+
+                            # Remove do session_state com base no caminho exato
+                            arquivos_atuais = [item for item in arquivos_atuais if item["Caminho"] != str(caminho_arquivo)]
+                            arquivos_removidos += 1
+
+                        except Exception as e:
+                            st.error(f"Erro ao excluir {info['Nome do Arquivo']}: {e}")
+
+                    # Atualiza a lista no session_state após remoção
+                    st.session_state.uploaded_files_info = arquivos_atuais
+
+                    st.success(f"{arquivos_removidos} arquivo(s) removido(s) com sucesso.")
 
             if st.button("Converter PDFs Selecionados para XML", key="btn_convert_pdfs"):
                 if selected_files_indices:
