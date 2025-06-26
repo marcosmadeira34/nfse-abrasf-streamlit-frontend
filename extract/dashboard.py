@@ -825,6 +825,7 @@ with tab3:
 
     if not xmls_to_send_info:
         st.info("Nenhum XML pronto para envio ou todos já foram enviados.")
+        st.write("Entre em contato com o desenvolvedor para implementar a lógica de envio real.")
     else:
         df_xmls_to_send = pd.DataFrame(xmls_to_send_info)
 
@@ -844,8 +845,8 @@ with tab3:
             key="multiselect_send_xmls"
         )
 
-        if st.button("Enviar XMLS..", key="btn_send_xmls"):
-            st.write("Entre em contato com o desenvolvedor para implementar a lógica de envio real.")
+        #if st.button("Enviar XMLS..", key="btn_send_xmls"):
+            
     #         if selected_xml_indices:
     #             st.info("Iniciando envio para a API via backend...")
     #             progress_bar_send = st.progress(0)
