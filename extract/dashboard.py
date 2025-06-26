@@ -38,7 +38,7 @@ st.set_page_config(
 )
 
 st.title("Sistema de Automação para Notas Fiscais de Serviço")
-st.markdown("Automatize a extração inteligente de dados de NFS-e em PDF utilizando IA e integre diretamente com seu sistema Domínio via API de forma segura e eficiente.")
+st.markdown("Transforme PDFs de NFS-e em dados prontos para integração com seu sistema Domínio Fiscal e elimine o trabalho manual!")
 
 # --- Diretórios de Upload e Saída ---
 UPLOAD_DIR = Path("data/uploads")
@@ -586,7 +586,7 @@ with tab2:
 
             if st.button("Converter PDFs Selecionados para XML", key="btn_convert_pdfs"):
                 if selected_files_indices:
-                    st.info("Preparando arquivos para envio...")
+                    #st.info("Preparando arquivos para envio...")
                     files_data_for_backend = {}
                     original_indices_map = {} # Mapeia file_name para o índice original no session_state
                     for idx in selected_files_indices:
@@ -604,7 +604,7 @@ with tab2:
                     #st.write("DEBUG - original_indices_map:", original_indices_map)
 
                     if files_data_for_backend:
-                        st.info("Enviando PDFs para processamento no backend...")
+                        st.info("Processando arquivos no backend...")
                         # DEBUG: Antes de chamar o backend
                         #st.write("DEBUG - Chamando call_django_backend com arquivos:", list(files_data_for_backend.keys()))
                         # Use a função genérica para chamar o endpoint de upload/processamento
