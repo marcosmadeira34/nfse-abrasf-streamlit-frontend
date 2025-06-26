@@ -794,8 +794,8 @@ with tab2:
 
 # --- TAB 3: Enviar para API ---
 with tab3:
-    st.header("Passo 3: Enviar XMLs para a API")
-    st.markdown("Selecione os XMLs que já foram gerados e envie-os para a API de integração.")
+    st.header("Passo 3 - Integração Domínio Fiscal")
+    st.markdown("Envie os XMls automaticamente para seu Domínio Fiscal com apenas 1 clique.")
 
     # A lógica aqui assume que você baixou o ZIP e extraiu os XMLs para algum lugar localmente
     # ou que o Streamlit agora pode fazer requisições para pegar XMLs individuais se o Django os expor.
@@ -844,48 +844,49 @@ with tab3:
             key="multiselect_send_xmls"
         )
 
-        if st.button("Enviar XMLs Selecionados para API", key="btn_send_xmls"):
-            if selected_xml_indices:
-                st.info("Iniciando envio para a API via backend...")
-                progress_bar_send = st.progress(0)
-                for i, df_index in enumerate(selected_xml_indices):
-                    file_data_to_send = df_xmls_to_send.loc[df_index]
-                    original_idx = file_data_to_send["Original Index"]
+        if st.button("Enviar XMLS..", key="btn_send_xmls"):
+            st.write("Entre em contato com o desenvolvedor para implementar a lógica de envio real.")
+    #         if selected_xml_indices:
+    #             st.info("Iniciando envio para a API via backend...")
+    #             progress_bar_send = st.progress(0)
+    #             for i, df_index in enumerate(selected_xml_indices):
+    #                 file_data_to_send = df_xmls_to_send.loc[df_index]
+    #                 original_idx = file_data_to_send["Original Index"]
 
-                    st.session_state.uploaded_files_info[original_idx]["Status Envio"] = "Enviando..."
-                    progress_bar_send.progress((i + 1) / len(selected_xml_indices))
+    #                 st.session_state.uploaded_files_info[original_idx]["Status Envio"] = "Enviando..."
+    #                 progress_bar_send.progress((i + 1) / len(selected_xml_indices))
 
-                    # Chama a função genérica para interagir com o backend Django para enviar o XML
-                    send_response = call_django_backend(
-                        endpoint="/send-xml-to-external-api/", # ENDPOINT REAL NO SEU DJANGO para envio de XMLs
-                        method="POST",
-                        json_data={
-                            "xml_content": file_data_to_send["XML Content"], # Conteúdo XML real
-                            "file_name": file_data_to_send["Nome do Arquivo"]
-                        }
-                    )
+    #                 # Chama a função genérica para interagir com o backend Django para enviar o XML
+    #                 send_response = call_django_backend(
+    #                     endpoint="/send-xml-to-external-api/", # ENDPOINT REAL NO SEU DJANGO para envio de XMLs
+    #                     method="POST",
+    #                     json_data={
+    #                         "xml_content": file_data_to_send["XML Content"], # Conteúdo XML real
+    #                         "file_name": file_data_to_send["Nome do Arquivo"]
+    #                     }
+    #                 )
                     
-                    if send_response is None:
-                        status_send = "Falha no Envio"
-                        details_send = "Erro de comunicação com o backend."
-                    else:
-                        status_send = send_response.get("status", "Desconhecido") # Assumindo que backend retorna 'status'
-                        details_send = send_response.get("message", send_response.get("error", "Sem detalhes.")) # Assumindo 'message' ou 'error'
+    #                 if send_response is None:
+    #                     status_send = "Falha no Envio"
+    #                     details_send = "Erro de comunicação com o backend."
+    #                 else:
+    #                     status_send = send_response.get("status", "Desconhecido") # Assumindo que backend retorna 'status'
+    #                     details_send = send_response.get("message", send_response.get("error", "Sem detalhes.")) # Assumindo 'message' ou 'error'
 
-                    st.session_state.uploaded_files_info[original_idx]["Status Envio"] = status_send
-                    st.session_state.uploaded_files_info[original_idx]["Detalhes"] += f" | Envio: {details_send}"
+    #                 st.session_state.uploaded_files_info[original_idx]["Status Envio"] = status_send
+    #                 st.session_state.uploaded_files_info[original_idx]["Detalhes"] += f" | Envio: {details_send}"
 
-                    time.sleep(0.5)
-                progress_bar_send.empty()
-                st.success("Processo de envio concluído!")
-                st.rerun()
+    #                 time.sleep(0.5)
+    #             progress_bar_send.empty()
+    #             st.success("Processo de envio concluído!")
+    #             st.rerun()
 
-    st.subheader("Status de Envio dos XMLs:")
-    if st.session_state.uploaded_files_info:
-        df_current_status = pd.DataFrame(st.session_state.uploaded_files_info)
-        st.dataframe(df_current_status[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
-    else:
-        st.info("Nenhum arquivo carregado ou processado ainda.")
+    # st.subheader("Status de Envio dos XMLs:")
+    # if st.session_state.uploaded_files_info:
+    #     df_current_status = pd.DataFrame(st.session_state.uploaded_files_info)
+    #     st.dataframe(df_current_status[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
+    # else:
+    #     st.info("Nenhum arquivo carregado ou processado ainda.")
 
 # --- TAB 4: Histórico ---
 with tab4:
