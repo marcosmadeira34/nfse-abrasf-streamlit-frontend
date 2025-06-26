@@ -520,23 +520,28 @@ with tab1:
             help="Você pode enviar um ou vários arquivos de uma vez.",
             key="pdf_uploader"
         )
+        if 'uploaded_files_info' not in st.session_state:
+            st.session_state.uploaded_files_info = []
 
         if uploaded_files:
             for f in uploaded_files:
                 unique_name = f"{Path(f.name).stem}_{uuid.uuid4().hex[:8]}.pdf"
                 file_path = UPLOAD_DIR / unique_name
 
-                with open(file_path, "wb") as out:
-                    out.write(f.read())
+                # Verifica se o caminho já está na session_state
+                caminhos_existentes = [info["Caminho"] for info in st.session_state.uploaded_files_info]
+                if str(file_path) not in caminhos_existentes:
+                    with open(file_path, "wb") as out:
+                        out.write(f.read())
 
-                st.session_state.uploaded_files_info.append({
-                    "Nome do Arquivo": f.name,
-                    "Caminho": str(file_path),
-                    "Status": "Carregado",
-                    "XML Gerado": "-",
-                    "Status Envio": "-",
-                    "Detalhes": ""
-                })
+                    st.session_state.uploaded_files_info.append({
+                        "Nome do Arquivo": f.name,
+                        "Caminho": str(file_path),
+                        "Status": "Carregado",
+                        "XML Gerado": "-",
+                        "Status Envio": "-",
+                        "Detalhes": ""
+            })
                 
             # if new_uploads_count > 0:
             #     st.success(f"{new_uploads_count} arquivo(s) novo(s) salvo(s) com sucesso!")
