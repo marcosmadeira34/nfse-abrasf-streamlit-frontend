@@ -526,14 +526,27 @@ with tab1:
                 file_path = UPLOAD_DIR / f.name
                 with open(file_path, "wb") as out:
                     out.write(f.read())
-                st.session_state.uploaded_files_info.append({
-                    "Nome do Arquivo": f.name,
-                    "Caminho": str(file_path),
-                    "Status": "Carregado",
-                    "XML Gerado": "-",
-                    "Status Envio": "-",
-                    "Detalhes": ""
-                })
+                
+                # Verifica se o arquivo já existe na lista (evita duplicação na interface)
+                existing_file = next((info for info in st.session_state.uploaded_files_info 
+                                    if info["Nome do Arquivo"] == f.name), None)
+                
+                if existing_file:
+                    # Atualiza o arquivo existente para status "Carregado" novamente
+                    existing_file["Status"] = "Carregado"
+                    existing_file["XML Gerado"] = "-"
+                    existing_file["Status Envio"] = "-"
+                    existing_file["Detalhes"] = "Arquivo recarregado"
+                else:
+                    # Adiciona novo arquivo à lista
+                    st.session_state.uploaded_files_info.append({
+                        "Nome do Arquivo": f.name,
+                        "Caminho": str(file_path),
+                        "Status": "Carregado",
+                        "XML Gerado": "-",
+                        "Status Envio": "-",
+                        "Detalhes": ""
+                    })
                 new_uploads_count += 1
                 
             if new_uploads_count > 0:
@@ -554,6 +567,7 @@ with tab2:
         if not df_to_process.empty:
             st.subheader("PDFs Prontos para Conversão:")
 
+            # Usa os índices originais do session_state em vez dos índices do DataFrame filtrado
             all_options = df_to_process.index.tolist()
             select_all = st.checkbox("Marcar/Desmarcar Todos", key="checkbox_select_all_convert")
 
@@ -576,6 +590,7 @@ with tab2:
                     files_data_for_backend = {}
                     original_indices_map = {} # Mapeia file_name para o índice original no session_state
                     for idx in selected_files_indices:
+                        # idx já é o índice correto do session_state, não precisa mapear do df_to_process
                         file_info = st.session_state.uploaded_files_info[idx]
                         file_path = Path(file_info["Caminho"])
                         if file_path.exists():
