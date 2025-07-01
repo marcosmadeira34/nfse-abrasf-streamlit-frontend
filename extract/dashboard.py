@@ -48,8 +48,8 @@ if not StreamlitAuthManager.ensure_authenticated():
     show_login_page()
     st.stop()  # Para a execução aqui se não estiver autenticado
 
-st.title("Sistema de Automação para Notas Fiscais de Serviço")
-st.markdown("Transforme PDFs de NFS-e em dados prontos para integração com seu sistema Domínio Fiscal e elimine o trabalho manual!")
+st.title("❤️ LoveNFSE")
+st.markdown("Converta PDFs de NFS-e em XML prontos para integração automática com seu sistema fiscal e elimine o trabalho manual!")
 
 # --- Diretórios de Upload e Saída ---
 UPLOAD_DIR = Path("data/uploads")
