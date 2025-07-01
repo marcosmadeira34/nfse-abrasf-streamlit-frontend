@@ -546,9 +546,21 @@ with tab1:
             new_uploads_count = 0
             for f in uploaded_files:
                 file_path = UPLOAD_DIR / f.name
-                if not file_path.exists():
-                    with open(file_path, "wb") as out:
-                        out.write(f.read())
+                with open(file_path, "wb") as out:
+                    out.write(f.read())
+                
+                # Verifica se o arquivo já existe na lista (evita duplicação na interface)
+                existing_file = next((info for info in st.session_state.uploaded_files_info 
+                                    if info["Nome do Arquivo"] == f.name), None)
+                
+                if existing_file:
+                    # Atualiza o arquivo existente para status "Carregado" novamente
+                    existing_file["Status"] = "Carregado"
+                    existing_file["XML Gerado"] = "-"
+                    existing_file["Status Envio"] = "-"
+                    existing_file["Detalhes"] = "Arquivo recarregado"
+                else:
+                    # Adiciona novo arquivo à lista
                     st.session_state.uploaded_files_info.append({
                         "Nome do Arquivo": f.name,
                         "Caminho": str(file_path),
@@ -557,10 +569,10 @@ with tab1:
                         "Status Envio": "-",
                         "Detalhes": ""
                     })
-                    new_uploads_count += 1
+                new_uploads_count += 1
                 
             if new_uploads_count > 0:
-                st.success(f"{new_uploads_count} arquivo(s) novo(s) salvo(s) com sucesso!")
+                st.success(f"{new_uploads_count} arquivo(s) salvo(s) com sucesso!")
 
 # --- TAB 2: Revisar & Converter ---
 with tab2:
