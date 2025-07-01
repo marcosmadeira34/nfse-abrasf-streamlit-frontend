@@ -214,9 +214,8 @@ class StreamlitAuthManager:
 
 def show_login_page():
     """Exibe a página de login"""
-    st.title("🔐 Login - NFS-e Control")
-    st.markdown("Entre com suas credenciais para acessar o sistema")
-    
+    st.title("❤️ LoveNFSE")
+    st.markdown("A ferramenta que te faz amar até as notas fiscais da prefeitura!")
     with st.form("login_form"):
         col1, col2, col3 = st.columns([1, 2, 1])
         
