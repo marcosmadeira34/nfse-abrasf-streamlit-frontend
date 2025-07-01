@@ -35,8 +35,8 @@ DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
 
 # --- Configuração da Página ---
 st.set_page_config(
-    page_title="NFS-e Control - Sistema de Gerenciamento",
-    page_icon="🧾",
+    page_title="LoveNFSE - Automação de Notas Fiscais de Serviço",
+    page_icon=":love_letter:",
     layout="wide"
 )
 
