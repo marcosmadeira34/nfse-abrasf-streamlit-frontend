@@ -382,7 +382,7 @@ def show_login_page():
                     
                     if success:
                         st.success(f"✅ {message}")
-                        st.balloons()
+                        #st.balloons()
                         time.sleep(1)
                         st.rerun()
                     else:
