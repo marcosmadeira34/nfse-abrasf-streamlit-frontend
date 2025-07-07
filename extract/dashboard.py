@@ -49,26 +49,27 @@ def load_custom_css():
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
     :root {
-        --blue-navy: #003366;
-        --light-gray: #F5F7FA;
-        --white: #FFFFFF;
-        --sky-blue: #5DADE2;
-        --medium-gray: #7D7D7D;
+        --pure-white: #FFFFFF;
+        --electric-blue: #007BFF;
+        --light-gray-blue: #E8EAF6;
+        --medium-dark: #2C3E50;
+        --mint-green: #2ECC71;
     }
 
     .main {
-        background-color: var(--light-gray);
+        background-color: var(--pure-white);
         font-family: 'Poppins', sans-serif;
+        color: var(--medium-dark);
     }
 
     .main-header {
-        background-color: var(--blue-navy);
+        background-color: var(--electric-blue);
         padding: 2rem;
         border-radius: 12px;
         margin-bottom: 2rem;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
         text-align: center;
-        color: var(--white);
+        color: var(--pure-white);
     }
 
     .main-header h1 {
@@ -79,11 +80,11 @@ def load_custom_css():
 
     .main-header .subtitle {
         font-size: 1.1rem;
-        color: var(--red);
+        color: #ffff;
     }
 
     h1, h2, h3 {
-        color: var(--blue-navy);
+        color: var(--medium-dark);
     }
 
     h1 { font-size: 2.5rem; }
@@ -91,80 +92,80 @@ def load_custom_css():
     h3 { font-size: 1.4rem; }
 
     .stButton button {
-        background-color: var(--sky-blue);
-        color: var(--white);
+        background-color: var(--electric-blue);
+        color: var(--pure-white);
         border: none;
         border-radius: 25px;
         font-weight: 600;
         padding: 0.75rem 2rem;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 3px 8px rgba(0, 123, 255, 0.6);
         transition: all 0.3s ease;
     }
 
     .stButton button:hover {
-        background-color: var(--blue-navy);
-        color: var(--white);
+        background-color: var(--mint-green);
+        color: var(--pure-white);
         transform: translateY(-2px);
     }
 
     .stTabs [data-baseweb="tab-list"] {
-        background-color: var(--white);
+        background-color: var(--light-gray-blue);
         border-radius: 10px;
         padding: 0.5rem;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
 
     .stTabs [data-baseweb="tab"] {
-        background-color: var(--light-gray);
+        background-color: var(--pure-white);
         border-radius: 8px;
         font-weight: 600;
-        color: var(--blue-navy);
+        color: var(--medium-dark);
     }
 
     .stTabs [data-baseweb="tab"]:hover {
-        background-color: var(--sky-blue);
-        color: var(--white);
+        background-color: var(--electric-blue);
+        color: var(--pure-white);
     }
 
     .stTabs [aria-selected="true"] {
-        background-color: var(--blue-navy);
-        color: var(--white);
+        background-color: var(--mint-green);
+        color: var(--pure-white);
     }
 
     .metric-card {
-        background-color: var(--white);
-        border-left: 4px solid var(--sky-blue);
+        background-color: var(--pure-white);
+        border-left: 4px solid var(--electric-blue);
         padding: 1.5rem;
         border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
         transition: all 0.3s ease;
     }
 
     .metric-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
     }
 
     .css-1d391kg {
-        background-color: var(--medium-gray);
+        background-color: var(--light-gray-blue);
     }
 
     .stFileUploader > div > div {
-        background-color: var(--light-gray);
-        border: 2px dashed var(--sky-blue);
+        background-color: var(--pure-white);
+        border: 2px dashed var(--electric-blue);
         border-radius: 15px;
         padding: 2rem;
     }
 
     .stProgress .st-bo {
-        background-color: var(--sky-blue);
+        background-color: var(--electric-blue);
     }
 
     .streamlit-expanderHeader {
-        background-color: var(--white);
+        background-color: var(--light-gray-blue);
         border-radius: 10px;
         font-weight: 600;
-        color: var(--blue-navy);
+        color: var(--medium-dark);
     }
 
     @media (max-width: 768px) {
@@ -306,8 +307,8 @@ def call_django_backend(endpoint: str, method: str = "POST",
     # Debug para verificar se o token está sendo enviado
     import logging
     logger = logging.getLogger(__name__)
-    logger.info(f"Calling {method} {url}")
-    logger.info(f"Headers: {headers}")
+    #logger.info(f"Calling {method} {url}")
+    #logger.info(f"Headers: {headers}")
 
     try:
         response = None
