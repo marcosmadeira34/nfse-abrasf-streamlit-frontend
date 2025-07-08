@@ -14,7 +14,6 @@ import requests
 import io
 import zipfile
 import asyncio
-import websockets
 import threading
 
 # --- Importações do sistema de autenticação ---
