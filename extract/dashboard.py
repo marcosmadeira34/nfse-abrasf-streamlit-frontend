@@ -952,16 +952,16 @@ with tab2:
                                 "remaining_credits": response.get("remaining_credits", 0)
                             }
                             
-                            st.success(f"""
-                            ✅ **Processamento Iniciado com Sucesso!**
+                            # st.success(f"""
+                            # ✅ **Processamento Iniciado com Sucesso!**
                             
-                            - **Arquivos enviados:** {len(selected_files)}
-                            - **Créditos consumidos:** {response.get('credits_used', len(selected_files))}
-                            - **Créditos restantes:** {response.get('remaining_credits', 0)}
-                            - **Task ID:** {task_id}
+                            # - **Arquivos enviados:** {len(selected_files)}
+                            # - **Créditos consumidos:** {response.get('credits_used', len(selected_files))}
+                            # - **Créditos restantes:** {response.get('remaining_credits', 0)}
+                            # - **Task ID:** {task_id}
                             
-                            ⏳ Aguarde o processamento ser concluído...
-                            """)
+                            # ⏳ Aguarde o processamento ser concluído...
+                            # """)
                             
                             st.rerun()
                         else:
