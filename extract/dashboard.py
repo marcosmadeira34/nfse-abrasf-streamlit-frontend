@@ -207,11 +207,18 @@ load_custom_css()
 # --- Header Principal com Mascote ---
 def render_main_header():
     st.markdown("""
-    <div class="main-header fade-in">
-        <h1>LoveNFSE</h1>
-        <div class="subtitle" style="font-size: 1.5rem;">A ferramenta que te faz amar a nota fiscal da prefeitura</div>
-    </div>
-    """, unsafe_allow_html=True)
+                <style>
+                    .main-header {
+                        margin-top: -50px;  /* Ajuste aqui o valor para subir mais ou menos */
+                        text-align: center;
+                    }
+                </style>
+
+                <div class="main-header fade-in">
+                    <h1>LoveNFSE</h1>
+                    <div class="subtitle" style="font-size: 1.5rem;">A ferramenta que te faz amar a nota fiscal da prefeitura</div>
+                </div>
+            """, unsafe_allow_html=True)
 
 # --- Sidebar com Informações do Usuário ---
 # def render_user_sidebar():
