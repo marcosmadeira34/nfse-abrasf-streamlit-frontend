@@ -18,7 +18,7 @@ import threading
 
 # --- Importações do sistema de autenticação ---
 from streamlit_auth import StreamlitAuthManager, require_auth, show_login_page
-# from streamlit_credits import show_credits_sidebar, show_credit_store, show_payment_details, CreditManager
+from streamlit_credits import show_credits_sidebar, show_credit_store, show_payment_details, CreditManager
 # from homepage import get_homepage_html
 
 
@@ -195,8 +195,8 @@ def render_main_header():
     """, unsafe_allow_html=True)
 
 # --- Sidebar com Informações do Usuário ---
-# def render_user_sidebar():
-#     show_credits_sidebar()
+def render_user_sidebar():
+    show_credits_sidebar()
 
 # --- Cards de Métricas ---
 def render_metrics_cards():
@@ -261,16 +261,16 @@ if not StreamlitAuthManager.ensure_authenticated():
 
 # Se chegou até aqui, o usuário está autenticado
 render_main_header()
-# render_user_sidebar()
+render_user_sidebar()
 
 # --- Verifica se deve mostrar a loja de créditos ---
-# if st.session_state.get('show_payment_details'):
-#     show_payment_details()
-#     st.stop()
+if st.session_state.get('show_payment_details'):
+    show_payment_details()
+    st.stop()
 
-# if st.session_state.get('show_credit_store'):
-#     show_credit_store()
-#     st.stop()
+if st.session_state.get('show_credit_store'):
+    show_credit_store()
+    st.stop()
 
 # --- Métricas Dashboard ---
 render_metrics_cards()
@@ -889,37 +889,37 @@ with tab2:
             if st.button("Converter PDFs Selecionados para XML", key="btn_convert_pdfs"):
                 if selected_files_indices:
                     # Verifica créditos BASEADO NO NÚMERO DE ARQUIVOS SELECIONADOS
-                    # credit_check = CreditManager.check_credits_for_files(len(selected_files_indices))
+                    credit_check = CreditManager.check_credits_for_files(len(selected_files_indices))
                     
-                    # if not credit_check['has_enough']:
-                    #     st.error(f"""
-                    #     ❌ **Créditos Insuficientes!**
+                    if not credit_check['has_enough']:
+                        st.error(f"""
+                        ❌ **Créditos Insuficientes!**
                         
-                    #     - **Arquivos selecionados:** {len(selected_files_indices)}
-                    #     - **Créditos necessários:** {credit_check['required']}
-                    #     - **Seus créditos:** {credit_check['current_balance']}
-                    #     - **Faltam:** {credit_check['missing']} crédito(s)
+                        - **Arquivos selecionados:** {len(selected_files_indices)}
+                        - **Créditos necessários:** {credit_check['required']}
+                        - **Seus créditos:** {credit_check['current_balance']}
+                        - **Faltam:** {credit_check['missing']} crédito(s)
                         
-                    #     Cada arquivo consome 1 crédito. Compre mais créditos para continuar! 🛒
-                    #     """)
+                        Cada arquivo consome 1 crédito. Compre mais créditos para continuar! 🛒
+                        """)
                         
-                    #     if st.button("🛒 Comprar Créditos Agora", type="primary"):
-                    #         st.session_state.show_credit_store = True
-                    #         st.rerun()
+                        if st.button("🛒 Comprar Créditos Agora", type="primary"):
+                            st.session_state.show_credit_store = True
+                            st.rerun()
                         
-                    #     st.stop()
+                        st.stop()
                     
-                    # # Mostra confirmação DETALHADA de consumo
-                    # st.info(f"""
-                    # ℹ️ **Confirmação de Créditos**
+                    # Mostra confirmação DETALHADA de consumo
+                    st.info(f"""
+                    ℹ️ **Confirmação de Créditos**
                     
-                    # - **Arquivos a processar:** {len(selected_files_indices)}
-                    # - **Créditos que serão consumidos:** {credit_check['required']}
-                    # - **Seus créditos atuais:** {credit_check['current_balance']}
-                    # - **Créditos restantes após processamento:** {credit_check['remaining_after']}
+                    - **Arquivos a processar:** {len(selected_files_indices)}
+                    - **Créditos que serão consumidos:** {credit_check['required']}
+                    - **Seus créditos atuais:** {credit_check['current_balance']}
+                    - **Créditos restantes após processamento:** {credit_check['remaining_after']}
                     
-                    # 💡 **Importante:** Os créditos serão debitados ANTES do processamento iniciar.
-                    # """)
+                    💡 **Importante:** Os créditos serão debitados ANTES do processamento iniciar.
+                    """)
                     
                     selected_files = [st.session_state.uploaded_files_info[i] for i in selected_files_indices]
                     
@@ -941,24 +941,24 @@ with tab2:
                             task_id = response.get("task_id")  # Em vez de task_ids
                             merge_id = response.get("merge_id", "")
                             
-                            # st.session_state.task_status = {
-                            #     "task_id": task_id,  # Único task_id
-                            #     "merge_id": merge_id,
-                            #     "files_count": response.get("files_count", len(selected_files)),
-                            #     "credits_used": response.get("credits_used", len(selected_files)),
-                            #     "remaining_credits": response.get("remaining_credits", 0)
-                            # }
+                            st.session_state.task_status = {
+                                "task_id": task_id,  # Único task_id
+                                "merge_id": merge_id,
+                                "files_count": response.get("files_count", len(selected_files)),
+                                "credits_used": response.get("credits_used", len(selected_files)),
+                                "remaining_credits": response.get("remaining_credits", 0)
+                            }
                             
-                            # st.success(f"""
-                            # ✅ **Processamento Iniciado com Sucesso!**
+                            st.success(f"""
+                            ✅ **Processamento Iniciado com Sucesso!**
                             
-                            # - **Arquivos enviados:** {len(selected_files)}
-                            # - **Créditos consumidos:** {response.get('credits_used', len(selected_files))}
-                            # - **Créditos restantes:** {response.get('remaining_credits', 0)}
-                            # - **Task ID:** {task_id}
+                            - **Arquivos enviados:** {len(selected_files)}
+                            - **Créditos consumidos:** {response.get('credits_used', len(selected_files))}
+                            - **Créditos restantes:** {response.get('remaining_credits', 0)}
+                            - **Task ID:** {task_id}
                             
-                            # ⏳ Aguarde o processamento ser concluído...
-                            # """)
+                            ⏳ Aguarde o processamento ser concluído...
+                            """)
                             
                             st.rerun()
                         else:
