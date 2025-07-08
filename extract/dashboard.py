@@ -19,7 +19,7 @@ import threading
 # --- Importações do sistema de autenticação ---
 from streamlit_auth import StreamlitAuthManager, require_auth, show_login_page
 from streamlit_credits import show_credits_sidebar, show_credit_store, show_payment_details, CreditManager
-from homepage import get_homepage_html
+# from homepage import get_homepage_html
 
 
 # --- Suas importações existentes ---
