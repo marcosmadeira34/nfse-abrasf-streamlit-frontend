@@ -13,10 +13,15 @@ import base64
 import requests
 import io
 import zipfile
+import asyncio
+import websockets
+import threading
 
 # --- Importações do sistema de autenticação ---
 from streamlit_auth import StreamlitAuthManager, require_auth, show_login_page
 from streamlit_credits import show_credits_sidebar, show_credit_store, show_payment_details, CreditManager
+from homepage import get_homepage_html
+
 
 # --- Suas importações existentes ---
 #from services import XMLGenerator
@@ -41,7 +46,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS Customizado com Identidade Visual ---
+
+
+
+
 # --- CSS Customizado com Identidade Visual LoveNFSE ---
 def load_custom_css():
     st.markdown("""
@@ -240,6 +248,8 @@ def render_metrics_cards():
 # --- Inicialização do Sistema de Autenticação ---
 StreamlitAuthManager.initialize_session_state()
 
+# get_homepage_html()  # Carrega a homepage HTML customizada
+
 # --- Inicialização de Estado da Sessão (MOVER PARA ANTES DA AUTENTICAÇÃO) ---
 if 'uploaded_files_info' not in st.session_state:
     st.session_state.uploaded_files_info = []
@@ -396,6 +406,7 @@ def call_django_backend_zip_bytes(endpoint: str, method: str = "GET") -> bytes |
         st.error(f"Erro inesperado ao chamar '{endpoint}': {str(e)}")
         return None
 
+
 # --- Função para Enviar XML para a API Externa (Via Backend Django) ---
 def send_xml_to_external_api(xml_content: str, file_name: str) -> dict:
     """
@@ -411,6 +422,7 @@ def send_xml_to_external_api(xml_content: str, file_name: str) -> dict:
     }
     response = call_django_backend("/send-xml-to-external-api/", method="POST", json_data=data_to_send)
     return response
+
 
 # --- Função Principal de Processamento de PDFs e Armazenamento dos XMLs ---
 def process_pdfs_for_extraction(uploaded_pdfs: list) -> None:
@@ -504,6 +516,7 @@ def process_pdfs_for_extraction(uploaded_pdfs: list) -> None:
     else:
         st.session_state.processing_status = "failed"
         st.error("❌ O processamento falhou ou nenhum XML foi extraído. Verifique os logs do backend.")
+
 
 # --- Função para Juntar PDFs (mantida como está, sem grandes refatorações aqui) ---
 def merge_pdfs_and_download(merge_files: list, output_filename: str) -> None:
@@ -733,7 +746,6 @@ def send_xml_via_django_backend(xml_content: str, file_name: str) -> tuple[str, 
         return "Erro no Envio", f"Erro de rede ou HTTP: {error_detail}"
     
 
-
 # --- Função de Simulação de Envio para API (Mantenha se ainda não tiver a real) ---
 def simulate_api_send(xml_path):
     """Simula o envio do XML para a API."""
@@ -744,10 +756,33 @@ def simulate_api_send(xml_path):
         return "Erro no Envio", "Falha de conexão com a API."
 
 
+# --- Função para Escutar Notificações em Tempo Real ---
+def listen_notifications():
+    async def run():
+        token = st.session_state.get("jwt_token", "")
+        logger.info(f"🔍 Verificando token JWT: {token}")
+        print("🔍 Verificando token JWT:", token)
+        if not token:
+            print("⚠️ Token JWT não encontrado! Faça login antes.")
+            return
+
+        # uri = "wss://nfse-abrasf-project-633c01390d1d.herokuapp.com/ws/notifications/"
+        uri = "ws://127.0.0.1:8001/ws/notifications/"
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+        async with websockets.connect(uri, extra_headers=headers) as websocket:
+            print("Tentando abrir conexão WebSocket...")
+            while True:
+                message = await websocket.recv()
+                print("🔔 Notificação recebida:", message)
+    asyncio.run(run())
+
 
 # --- Inicialização de Estado da Sessão ---
 if 'uploaded_files_info' not in st.session_state:
     st.session_state.uploaded_files_info = []
+
 
 # --- Abas para Organização do Fluxo ---
 tab1, tab2, tab3, tab4 = st.tabs(["1 - Importar PDFs", "2 - Revisar & Converter", "3 - Lançamento Automático", "📊 Histórico"])
@@ -806,6 +841,7 @@ with tab1:
                 
             if new_uploads_count > 0:
                 st.success(f"{new_uploads_count} arquivo(s) salvo(s) com sucesso!")
+
 
 # --- TAB 2: Processar & Converter ---
 with tab2:
@@ -1095,14 +1131,17 @@ with tab3:
             #         xml_content = f.read()
             # else:
             #     xml_content = f"<Nfse><Erro>XML local não encontrado para {info['Nome do Arquivo']}</Erro></Nfse>"
-            xml_content_placeholder = f"<Nfse><DadosServico><IdentificacaoServico><NomeArquivo>{info['Nome do Arquivo']}</NomeArquivo></IdentificacaoServico></DadosServico></Nfse>"
+            xml_content_real = st.session_state.xmls_gerados.get(info["Nome do Arquivo"])
 
-            xmls_to_send_info.append({
-                "Nome do Arquivo": info["Nome do Arquivo"],
-                "Caminho": info["Caminho"], # Caminho do PDF original
-                "XML Content": xml_content_placeholder, # Substituir por conteúdo XML real
-                "Original Index": idx # Usar o índice real no st.session_state.uploaded_files_info
-            })
+            if xml_content_real:
+                xmls_to_send_info.append({
+                    "Nome do Arquivo": info["Nome do Arquivo"],
+                    "Caminho": info["Caminho"],
+                    "XML Content": xml_content_real,
+                    "Original Index": idx
+                })
+            else:
+                st.warning(f"⚠️ XML real não encontrado para {info['Nome do Arquivo']}.")
 
     if not xmls_to_send_info:
         st.info("Nenhum XML pronto para envio ou todos já foram enviados.")
@@ -1167,6 +1206,7 @@ with tab3:
         st.dataframe(df_current_status[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio']], use_container_width=True)
     else:
         st.info("Nenhum arquivo carregado ou processado ainda.")
+
 
 # --- TAB 4: Relatórios ---
 with tab4:
