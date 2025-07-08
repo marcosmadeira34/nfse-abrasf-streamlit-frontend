@@ -4,9 +4,40 @@ import json
 from typing import Optional, Dict, Any
 import os
 import time
+from streamlit_cookies_manager import EncryptedCookieManager
+
 
 # Configurações do backend Django
 DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
+
+# Inicializa o gerenciador de cookies (a senha deve ser secreta e complexa)
+cookies = EncryptedCookieManager(prefix="myapp_", password="uma_senha_bem_complexa_123")
+if not cookies.ready():
+    st.stop()
+
+# --- Inicializa session_state com dados dos cookies ---
+def load_auth_from_cookies():
+    access_token = cookies.get("access_token")
+    refresh_token = cookies.get("refresh_token")
+    user_info_str = cookies.get("user_info")
+
+    if access_token and refresh_token and user_info_str:
+        st.session_state.authenticated = True
+        st.session_state.access_token = access_token
+        st.session_state.refresh_token = refresh_token
+        try:
+            st.session_state.user_info = json.loads(user_info_str)
+        except json.JSONDecodeError:
+            st.session_state.user_info = None
+    else:
+        st.session_state.authenticated = False
+        st.session_state.access_token = None
+        st.session_state.refresh_token = None
+        st.session_state.user_info = None
+
+# Inicializa no começo da aplicação
+if "authenticated" not in st.session_state:
+    load_auth_from_cookies()
 
 
 class StreamlitAuthManager:
@@ -14,15 +45,9 @@ class StreamlitAuthManager:
     
     @staticmethod
     def initialize_session_state():
-        """Inicializa o estado da sessão para autenticação"""
-        if 'authenticated' not in st.session_state:
-            st.session_state.authenticated = False
-        if 'access_token' not in st.session_state:
-            st.session_state.access_token = None
-        if 'refresh_token' not in st.session_state:
-            st.session_state.refresh_token = None
-        if 'user_info' not in st.session_state:
-            st.session_state.user_info = None
+        if "authenticated" not in st.session_state:
+            load_auth_from_cookies()
+
     
     @staticmethod
     def login(username: str, password: str) -> tuple[bool, str]:
@@ -55,6 +80,14 @@ class StreamlitAuthManager:
                 st.session_state.refresh_token = data['tokens']['refresh_token']
                 st.session_state.user_info = data['user']
                 
+               
+                # Armazena tokens nos cookies
+                cookies["access_token"] = data['tokens']['access_token']
+                cookies["refresh_token"] = data['tokens']['refresh_token']
+                cookies["user_info"] = json.dumps(data['user'])
+
+                cookies.save()
+
                 return True, "Login realizado com sucesso!"
             
             elif response.status_code == 401:
@@ -89,6 +122,12 @@ class StreamlitAuthManager:
         st.session_state.access_token = None
         st.session_state.refresh_token = None
         st.session_state.user_info = None
+
+        # Remove cookies
+        cookies["access_token"] = ""
+        cookies["refresh_token"] = ""
+        cookies["user_info"] = ""
+        cookies.save()
     
     @staticmethod
     def verify_token() -> bool:
@@ -451,3 +490,4 @@ def require_auth(func):
         return func(*args, **kwargs)
     
     return wrapper
+

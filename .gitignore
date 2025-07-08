@@ -8,7 +8,8 @@ __pycache__/
 *.log
 
 # Virtual environments
-.env/
+
+.env/git 
 venv/
 env/
 .venv/

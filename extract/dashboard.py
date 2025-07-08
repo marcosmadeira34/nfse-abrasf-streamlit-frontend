@@ -16,6 +16,8 @@ import zipfile
 import asyncio
 import threading
 
+
+
 # --- Importações do sistema de autenticação ---
 from streamlit_auth import StreamlitAuthManager, require_auth, show_login_page
 from streamlit_credits import show_credits_sidebar, show_credit_store, show_payment_details, CreditManager
@@ -46,7 +48,24 @@ st.set_page_config(
 )
 
 
+HISTORY_FILE = Path("data/history.json")
 
+def load_history():
+    if HISTORY_FILE.exists():
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    else:
+        # Histórico inicial vazio
+        return {
+            "processed_files": [],
+            "time_saved_total": 0
+        }
+
+
+# Função para carregar o histórico de processamento
+def save_history(history_data):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history_data, f, ensure_ascii=False, indent=2)
 
 
 # --- CSS Customizado com Identidade Visual LoveNFSE ---
@@ -57,14 +76,14 @@ def load_custom_css():
 
     :root {
         --pure-white: #FFFFFF;
-        --electric-blue: #007BFF;
+        --electric-blue: #007BFF;   
         --light-gray-blue: #E8EAF6;
         --medium-dark: #2C3E50;
         --mint-green: #2ECC71;
     }
 
-    .main {
-        background-color: var(--pure-white);
+    body, [data-testid="stAppViewContainer"] {
+        background-color: var(--light-gray-blue) !important;
         font-family: 'Poppins', sans-serif;
         color: var(--medium-dark);
     }
@@ -252,7 +271,37 @@ StreamlitAuthManager.initialize_session_state()
 # --- Inicialização de Estado da Sessão (MOVER PARA ANTES DA AUTENTICAÇÃO) ---
 if 'uploaded_files_info' not in st.session_state:
     st.session_state.uploaded_files_info = []
+
+
+
+HISTORY_FILE = Path("data/history.json")
+
+def load_history():
+    if HISTORY_FILE.exists():
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    else:
+        # Histórico inicial vazio
+        return {
+            "processed_files": [],
+            "time_saved_total": 0
+        }
+
+def save_history(history_data):
+    HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)  # <- Cria a pasta se não existir
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history_data, f, ensure_ascii=False, indent=2)
+
+if "history_data" not in st.session_state:
+    st.session_state.history_data = load_history()
     
+
+for file in st.session_state.uploaded_files_info:
+    file.setdefault("Status", "Pendente")
+    file.setdefault("XML Gerado", "Não")
+    file.setdefault("Status Envio", "Pendente")
+    file.setdefault("Detalhes", "")
+
 
 # Verifica autenticação antes de mostrar qualquer conteúdo
 if not StreamlitAuthManager.ensure_authenticated():
@@ -756,26 +805,7 @@ def simulate_api_send(xml_path):
 
 
 # --- Função para Escutar Notificações em Tempo Real ---
-def listen_notifications():
-    async def run():
-        token = st.session_state.get("jwt_token", "")
-        logger.info(f"🔍 Verificando token JWT: {token}")
-        print("🔍 Verificando token JWT:", token)
-        if not token:
-            print("⚠️ Token JWT não encontrado! Faça login antes.")
-            return
 
-        # uri = "wss://nfse-abrasf-project-633c01390d1d.herokuapp.com/ws/notifications/"
-        uri = "ws://127.0.0.1:8001/ws/notifications/"
-        headers = {
-            "Authorization": f"Bearer {token}"
-        }
-        async with websockets.connect(uri, extra_headers=headers) as websocket:
-            print("Tentando abrir conexão WebSocket...")
-            while True:
-                message = await websocket.recv()
-                print("🔔 Notificação recebida:", message)
-    asyncio.run(run())
 
 
 # --- Inicialização de Estado da Sessão ---
@@ -1017,11 +1047,19 @@ with tab2:
                             st.error(f"❌ Formato incorreto para {file_name}: {type(xml_content)}")
                     
                     # Atualiza status dos arquivos processados
-                    for file_name in arquivos_resultado.keys():
+                    for file_name, xml_content in arquivos_resultado.items():
                         for i, file_info in enumerate(st.session_state.uploaded_files_info):
                             if file_info["Nome do Arquivo"] == file_name:
                                 st.session_state.uploaded_files_info[i]["Status"] = "Concluído"
                                 st.session_state.uploaded_files_info[i]["XML Gerado"] = "Sim"
+                                st.session_state.uploaded_files_info[i]["XML Content"] = xml_content  # <-- ESSENCIAL
+
+                                # Adiciona no histórico persistente
+                                if file_name not in st.session_state.history_data["processed_files"]:
+                                    st.session_state.history_data["processed_files"].append(file_name)
+                                    st.session_state.history_data["time_saved_total"] += 3  # 3 min por arquivo processado
+                
+                    save_history(st.session_state.history_data)  # Salva o histórico no disco
                 
                 if zip_id:
                     st.session_state.zip_id = zip_id
@@ -1104,12 +1142,20 @@ with tab2:
 
 # --- TAB 3: Enviar para API ---
 with tab3:
+    for info in st.session_state.uploaded_files_info:
+        if info.get("XML Content"):
+            info["XML Gerado"] = "Sim"
+            info["Status"] = "Concluído"
+        if "Status Envio" not in info:
+            info["Status Envio"] = "-"
+
+
     st.markdown("""
     <div class="fade-in">
-        <h2><span class="icon">🚀</span>Enviar para API</h2>
+        <h2><span class="icon">🚀</span>Integração Domínio Fiscal</h2>
         <div class="info-box">
             <p style="font-family: 'Lato', sans-serif; margin: 0;">
-                <strong>🎯 Integração:</strong> Envie seus XMLs processados automaticamente para o sistema Domínio Fiscal. 
+                <strong></strong> Envie seus XMLs processados automaticamente para o sistema Domínio Fiscal. 
                 Rápido, seguro e confiável!
             </p>
         </div>
@@ -1122,6 +1168,8 @@ with tab3:
     # se o status for "Concluído" e "XML Gerado" for "Sim".
     # Em um cenário real, você teria que gerenciar os arquivos XML baixados/extraídos e carregá-los aqui.
 
+
+
     xmls_to_send_info = []
     for idx, info in enumerate(st.session_state.uploaded_files_info):
         if info["XML Gerado"] == "Sim" and info["Status Envio"] != "Enviado com Sucesso":
@@ -1133,7 +1181,7 @@ with tab3:
             #         xml_content = f.read()
             # else:
             #     xml_content = f"<Nfse><Erro>XML local não encontrado para {info['Nome do Arquivo']}</Erro></Nfse>"
-            xml_content_real = st.session_state.xmls_gerados.get(info["Nome do Arquivo"])
+            xml_content_real = info.get("XML Content")
 
             if xml_content_real:
                 xmls_to_send_info.append({
@@ -1144,6 +1192,9 @@ with tab3:
                 })
             else:
                 st.warning(f"⚠️ XML real não encontrado para {info['Nome do Arquivo']}.")
+    
+    #st.write("Debug - Arquivos no session_state:")
+    #st.write(st.session_state.uploaded_files_info)
 
     if not xmls_to_send_info:
         st.info("Nenhum XML pronto para envio ou todos já foram enviados.")
@@ -1158,24 +1209,25 @@ with tab3:
         else:
             default_xml_selection = []
 
-        selected_xml_indices = st.multiselect(
+
+        selected_rows_indices = st.multiselect(
             "Selecione os XMLs para enviar:",
-            options=all_xml_options,
+            options=df_xmls_to_send.index.tolist(),
             default=default_xml_selection,
             format_func=lambda x: df_xmls_to_send.loc[x, "Nome do Arquivo"],
             key="multiselect_send_xmls"
         )
 
         if st.button("Enviar XMLs Selecionados para API", key="btn_send_xmls"):
-            if selected_xml_indices:
+            if selected_rows_indices:
                 st.info("Iniciando envio para a API via backend...")
                 progress_bar_send = st.progress(0)
-                for i, df_index in enumerate(selected_xml_indices):
+                for i, df_index in enumerate(selected_rows_indices):
                     file_data_to_send = df_xmls_to_send.loc[df_index]
                     original_idx = file_data_to_send["Original Index"]
 
                     st.session_state.uploaded_files_info[original_idx]["Status Envio"] = "Enviando..."
-                    progress_bar_send.progress((i + 1) / len(selected_xml_indices))
+                    progress_bar_send.progress((i + 1) / len(selected_rows_indices))
 
                     # Chama a função genérica para interagir com o backend Django para enviar o XML
                     send_response = call_django_backend(
@@ -1195,12 +1247,30 @@ with tab3:
                         details_send = send_response.get("message", send_response.get("error", "Sem detalhes.")) # Assumindo 'message' ou 'error'
 
                     st.session_state.uploaded_files_info[original_idx]["Status Envio"] = status_send
+                    
+                    if "Detalhes" not in st.session_state.uploaded_files_info[original_idx]:
+                        st.session_state.uploaded_files_info[original_idx]["Detalhes"] = ""
+
                     st.session_state.uploaded_files_info[original_idx]["Detalhes"] += f" | Envio: {details_send}"
 
                     time.sleep(0.5)
                 progress_bar_send.empty()
                 st.success("Processo de envio concluído!")
-                st.rerun()
+                
+                for df_index in selected_rows_indices:
+                    file_data_to_send = df_xmls_to_send.loc[df_index]
+                    file_name = file_data_to_send["Nome do Arquivo"]
+                    original_idx = file_data_to_send["Original Index"]
+
+                    # ⬇️ ESTE CÓDIGO É ESSENCIAL (Cola isso aqui)
+                    st.session_state.uploaded_files_info[original_idx]["Status"] = "Concluído"
+
+                    # Atualiza histórico de tempo e arquivos processados (isso já tinha no seu código)
+                    if file_name not in st.session_state.history_data["processed_files"]:
+                        st.session_state.history_data["processed_files"].append(file_name)
+                        st.session_state.history_data["time_saved_total"] += 3  # 3 min por arquivo
+
+                save_history(st.session_state.history_data)  # Salva no disco
 
     st.subheader("Status de Envio dos XMLs:")
     if st.session_state.uploaded_files_info:
@@ -1212,81 +1282,35 @@ with tab3:
 
 # --- TAB 4: Relatórios ---
 with tab4:
-    st.markdown("""
-    <div class="fade-in">
-        <h2><span class="icon">📊</span>Relatórios e Histórico</h2>
-        <div class="info-box">
-            <p style="font-family: 'Lato', sans-serif; margin: 0;">
-                <strong>📈 Analytics:</strong> Acompanhe seu progresso, métricas de sucesso e histórico completo. 
-                Dados que ajudam você a crescer!
-            </p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # st.markdown(""" ... seu HTML ... """, unsafe_allow_html=True)
     
-    if st.session_state.uploaded_files_info:
-        df_history = pd.DataFrame(st.session_state.uploaded_files_info)
+    if st.session_state.history_data["processed_files"]:
+        df_history = pd.DataFrame({
+            "Nome do Arquivo": st.session_state.history_data["processed_files"]
+        })
+
+        st.markdown("#### ⏱️ Produtividade")
+        time_saved = st.session_state.history_data.get("time_saved_total", 0)
         
-        # Gráfico de pizza para status
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### 📊 Distribuição de Status")
-            status_counts = df_history['Status'].value_counts()
-            st.bar_chart(status_counts)
-        
-        with col2:
-            st.markdown("#### ⏱️ Economia de Tempo")
-            total_processed = len(df_history[df_history['Status'] == 'Concluído'])
-            time_saved = total_processed * 3  # 3 minutos por arquivo
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <div style="text-align: center;">
-                    <div style="font-size: 3rem; color: #E63946;">⏰</div>
-                    <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 2.5rem; color: #1D3557;">
-                        {time_saved} min
-                    </div>
-                    <div style="font-family: 'Lato', sans-serif; color: #457B9D;">
-                        Tempo Total Economizado
-                    </div>
-                    <div style="font-family: 'Lato', sans-serif; color: #2D7D32; font-size: 0.9rem; margin-top: 0.5rem;">
-                        ≈ R$ {time_saved * 2:.2f} em produtividade
-                    </div>
+        st.markdown(f"""
+        <div class="metric-card">
+            <div style="text-align: center;">
+                <div style="font-size: 3rem; color: #E63946;">⏰</div>
+                <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 2.5rem; color: #1D3557;">
+                    {time_saved} min
+                </div>
+                <div style="font-family: 'Lato', sans-serif; color: #457B9D;">
+                    Tempo Total Economizado
+                </div>
+                <div style="font-family: 'Lato', sans-serif; color: #2D7D32; font-size: 0.9rem; margin-top: 0.5rem;">
+                    ≈ R$ {time_saved * 2:.2f} em produtividade
                 </div>
             </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.markdown("#### 🔍 **Filtros Avançados:**")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            status_filter = st.multiselect(
-                "📊 **Status de Processamento:**",
-                options=df_history['Status'].unique().tolist(),
-                default=df_history['Status'].unique().tolist(),
-                key="multiselect_history_status"
-            )
-        
-        with col2:
-            send_status_filter = st.multiselect(
-                "🚀 **Status de Envio:**",
-                options=df_history['Status Envio'].unique().tolist(),
-                default=df_history['Status Envio'].unique().tolist(),
-                key="multiselect_history_send_status"
-            )
+        </div>
+        """, unsafe_allow_html=True)
 
-        filtered_df = df_history[
-            (df_history['Status'].isin(status_filter)) &
-            (df_history['Status Envio'].isin(send_status_filter))
-        ]
+        st.markdown("#### 📋 Histórico de Arquivos Processados:")
+        st.dataframe(df_history, use_container_width=True)
 
-        st.markdown("#### 📋 **Histórico Detalhado:**")
-        st.dataframe(
-            filtered_df[['Nome do Arquivo', 'Status', 'XML Gerado', 'Status Envio', 'Detalhes']],
-            use_container_width=True
-        )
     else:
         st.info("Nenhum dado de histórico disponível. Faça upload e processe alguns PDFs primeiro.")
