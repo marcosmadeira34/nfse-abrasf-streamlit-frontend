@@ -808,26 +808,29 @@ with tab1:
             help="Você pode enviar um ou vários arquivos de uma vez.",
             key="pdf_uploader"
         )
+        MAX_FILES = 100
 
         if uploaded_files:
+            if len(uploaded_files) > MAX_FILES:
+                st.warning(f"⚠️ Você enviou {len(uploaded_files)} arquivos, mas o limite é de {MAX_FILES}. Apenas os primeiros {MAX_FILES} arquivos serão processados.")
+                uploaded_files = uploaded_files[:MAX_FILES]  # Mantém os 100 primeiros
+
             new_uploads_count = 0
             for f in uploaded_files:
                 file_path = UPLOAD_DIR / f.name
                 with open(file_path, "wb") as out:
                     out.write(f.read())
                 
-                # Verifica se o arquivo já existe na lista (evita duplicação na interface)
+                # Verifica duplicidade na sessão
                 existing_file = next((info for info in st.session_state.uploaded_files_info 
                                     if info["Nome do Arquivo"] == f.name), None)
                 
                 if existing_file:
-                    # Atualiza o arquivo existente para status "Carregado" novamente
                     existing_file["Status"] = "Carregado"
                     existing_file["XML Gerado"] = "-"
                     existing_file["Status Envio"] = "-"
                     existing_file["Detalhes"] = "Arquivo recarregado"
                 else:
-                    # Adiciona novo arquivo à lista
                     st.session_state.uploaded_files_info.append({
                         "Nome do Arquivo": f.name,
                         "Caminho": str(file_path),
