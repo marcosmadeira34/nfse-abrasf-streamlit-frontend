@@ -845,12 +845,12 @@ with tab1:
             help="Você pode enviar um ou vários arquivos de uma vez.",
             key="pdf_uploader"
         )
-        MAX_FILES = 100
+        MAX_FILES = 30
 
         if uploaded_files:
             if len(uploaded_files) > MAX_FILES:
                 st.warning(f"⚠️ Você enviou {len(uploaded_files)} arquivos, mas o limite é de {MAX_FILES}. Apenas os primeiros {MAX_FILES} arquivos serão processados.")
-                uploaded_files = uploaded_files[:MAX_FILES]  # Mantém os 100 primeiros
+                uploaded_files = uploaded_files[:MAX_FILES]  # Mantém os 30 primeiros
 
             new_uploads_count = 0
             for f in uploaded_files:
@@ -1049,7 +1049,7 @@ with tab2:
                                 st.write(f"✅ XML válido para {file_name} (tamanho: {len(xml_content)} chars)")
                             else:
                                 st.error(f"❌ XML inválido para {file_name}: não começa com '<'")
-                                st.write(f"Conteúdo recebido: {xml_content[:100]}...")
+                                st.write(f"Conteúdo recebido: {xml_content[:30]}...")
                         else:
                             st.error(f"❌ Formato incorreto para {file_name}: {type(xml_content)}")
                     
