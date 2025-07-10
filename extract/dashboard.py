@@ -1354,12 +1354,13 @@ with tab4:
                     Tempo Total Economizado
                 </div>
                 <div style="font-family: 'Lato', sans-serif; color: #2D7D32; font-size: 0.9rem; margin-top: 0.5rem;">
-                    ≈ R$ {time_saved * 2:.2f} em produtividade
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
+                    # ≈ R$ {time_saved * 2:.2f} em produtividade
+        
         st.markdown("#### 📋 Histórico de Arquivos Processados:")
         st.dataframe(df_history, use_container_width=True)
 
