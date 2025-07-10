@@ -17,7 +17,6 @@ import asyncio
 import threading
 
 
-
 # --- Importações do sistema de autenticação ---
 from streamlit_auth import StreamlitAuthManager, require_auth, show_login_page
 from streamlit_credits import show_credits_sidebar, show_credit_store, show_payment_details, CreditManager
@@ -50,7 +49,6 @@ st.set_page_config(
 
 
 
-
 def load_history():
     if HISTORY_FILE.exists():
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
@@ -77,24 +75,25 @@ def load_custom_css():
 
     :root {
         --pure-white: #FFFFFF;
-        --electric-blue: #007BFF;   
-        --light-gray-blue: #E8EAF6;
-        --medium-dark: #2C3E50;
-        --mint-green: #2ECC71;
+        --soft-light-gray: #ECEFF4;
+        --medium-gray: #7B8A99;
+        --main-blue: #274C77;
+        --accent-blue: #A3CEF1;
+        --highlight-gold: #E6B800;
     }
 
     body, [data-testid="stAppViewContainer"] {
-        background-color: var(--light-gray-blue) !important;
+        background-color: var(--soft-light-gray) !important;
         font-family: 'Poppins', sans-serif;
-        color: var(--medium-dark);
+        color: var(--medium-gray);
     }
 
     .main-header {
-        background-color: var(--electric-blue);
+        background-color: var(--main-blue);
         padding: 2rem;
         border-radius: 12px;
         margin-bottom: 2rem;
-        box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+        box-shadow: 0 6px 16px rgba(39, 76, 119, 0.4);
         text-align: center;
         color: var(--pure-white);
     }
@@ -107,11 +106,11 @@ def load_custom_css():
 
     .main-header .subtitle {
         font-size: 1.1rem;
-        color: #ffff;
+        color: var(--pure-white);
     }
 
     h1, h2, h3 {
-        color: var(--medium-dark);
+        color: var(--main-blue);
     }
 
     h1 { font-size: 2.5rem; }
@@ -119,51 +118,59 @@ def load_custom_css():
     h3 { font-size: 1.4rem; }
 
     .stButton button {
-        background-color: var(--electric-blue);
-        color: var(--pure-white);
-        border: none;
-        border-radius: 25px;
-        font-weight: 600;
-        padding: 0.75rem 2rem;
-        box-shadow: 0 3px 8px rgba(0, 123, 255, 0.6);
-        transition: all 0.3s ease;
-    }
+    background-color: var(--main-blue);
+    color: var(--pure-white);
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    box-shadow: 0 3px 8px rgba(39, 76, 119, 0.6);
+    transition: all 0.3s ease;
+}
 
     .stButton button:hover {
-        background-color: var(--mint-green);
+        background-color: var(--accent-blue);
         color: var(--pure-white);
         transform: translateY(-2px);
     }
 
+    .stButton button:active,
+    .stButton button:focus {
+        background-color: var(--accent-blue);
+        color: var(--pure-white);
+    }
+
     .stTabs [data-baseweb="tab-list"] {
-        
-        background-color: var(--light-gray-blue);
-        border-radius: 10px;
-        padding: 0.5rem;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        margin-bottom: 1rem;
+    background-color: var(--soft-light-gray);
+    border-radius: 10px;
+    padding: 0.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem;
     }
 
     .stTabs [data-baseweb="tab"] {
-        background-color: var(--pure-white);
+        background-color: var(--accent-blue);
         border-radius: 8px;
         font-weight: 600;
-        color: var(--medium-dark);
+        color: var(--main-blue);
+        padding: 0.75rem 2rem;  /* Aqui está o segredo: padding lateral maior */
+        min-width: 150px;  /* Opcional: garante que o botão não fique estreito demais */
+        text-align: center;  /* Centraliza o texto, opcional */
     }
 
     .stTabs [data-baseweb="tab"]:hover {
-        background-color: var(--electric-blue);
+        background-color: var(--main-blue);
         color: var(--pure-white);
     }
 
     .stTabs [aria-selected="true"] {
-        background-color: var(--mint-green);
+        background-color: var(--main-blue);
         color: var(--pure-white);
     }
 
     .metric-card {
         background-color: var(--pure-white);
-        border-left: 4px solid var(--electric-blue);
+        border-left: 4px solid var(--main-blue);
         padding: 1.5rem;
         border-radius: 15px;
         box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
@@ -173,29 +180,29 @@ def load_custom_css():
 
     .metric-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        box-shadow: 0 8px 20px rgba(163, 206, 241, 0.3);
     }
 
     .css-1d391kg {
-        background-color: var(--light-gray-blue);
+        background-color: var(--soft-light-gray);
     }
 
     .stFileUploader > div > div {
         background-color: var(--pure-white);
-        border: 2px dashed var(--electric-blue);
+        border: 2px dashed var(--main-blue);
         border-radius: 15px;
         padding: 2rem;
     }
 
     .stProgress .st-bo {
-        background-color: var(--electric-blue);
+        background-color: var(--main-blue);
     }
 
     .streamlit-expanderHeader {
-        background-color: var(--light-gray-blue);
+        background-color: var(--soft-light-gray);
         border-radius: 10px;
         font-weight: 600;
-        color: var(--medium-dark);
+        color: var(--main-blue);
     }
 
     @media (max-width: 768px) {
@@ -203,6 +210,7 @@ def load_custom_css():
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 
 # Aplicar CSS customizado
@@ -219,7 +227,7 @@ def render_main_header():
                 </style>
 
                 <div class="main-header fade-in">
-                    <h1>LoveNFSE</h1>
+                    <h1>Conversor NFSE em XML Abrasf 1.0</h1>
                     <div class="subtitle" style="font-size: 1.5rem;">A ferramenta que te faz amar a nota fiscal da prefeitura</div>
                 </div>
             """, unsafe_allow_html=True)
@@ -329,6 +337,7 @@ if st.session_state.get('show_payment_details'):
     show_payment_details()
     st.stop()
 
+
 if st.session_state.get('show_credit_store'):
     show_credit_store()
     st.stop()
@@ -346,9 +355,6 @@ XML_DIR = Path("data/xmls")
 CHUNK_SIZE = 2  # Quantidade máxima de arquivos por requisição
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 XML_DIR.mkdir(parents=True, exist_ok=True)
-
-
-
 
 
 # --- Função Genérica de Comunicação com o Backend Django ---
@@ -816,6 +822,7 @@ def simulate_api_send(xml_path):
         return "Erro no Envio", "Falha de conexão com a API."
 
 
+
 def upload_files_in_chunks(all_files):
     """
     Faz o upload de arquivos para o backend de uma só vez, com barra de progresso.
@@ -849,13 +856,16 @@ if 'uploaded_files_info' not in st.session_state:
 # --- Abas para Organização do Fluxo ---
 tab1, tab2, tab3, tab4 = st.tabs(["1 - Importar PDFs", "2 - Revisar & Converter", "3 - Lançamento Automático", "📊 Histórico"])
 
+
 # --- TAB 1: Importar PDFs ---
 with tab1:
     st.markdown("""
-    <div class="fade-in">
-        <h2><span class="icon">📥</span>Importar Suas Notas Fiscais</h2>
+    <div class="fade-in" style="opacity: 1 !important; filter: none !important;">
+        <h2 style="font-weight: 700; color: var(--main-blue);">
+            <span class="icon">📥</span> <strong>Importar Suas Notas Fiscais</strong>
+        </h2>
         <div class="info-box">
-            <p style="font-family: 'Lato', sans-serif; margin: 0;">
+            <p style="font-family: 'Poppins', sans-serif; margin: 0; font-weight: 700; color: var(--main-blue); opacity: 1 !important; filter: none !important;">
                 <strong>💡 Dica:</strong> Arraste e solte seus arquivos PDF ou use o botão abaixo. 
                 Nossa IA processará automaticamente os dados com precisão!
             </p>
@@ -920,8 +930,6 @@ with tab1:
                 # Atualiza seleção automática para multiselect
                 st.session_state['selected_files_indices'] = list(range(len(st.session_state.uploaded_files_info)))
 
-                
-
 
 # --- TAB 2: Processar & Converter ---
 with tab2:
@@ -949,8 +957,13 @@ with tab2:
         df_to_process = df_files[~df_files['Status'].isin(['Concluído', 'Erro'])]
 
         if not df_to_process.empty:
-            st.subheader("PDFs Prontos para Conversão:")
-
+            st.markdown("""
+                <div class="fade-in" style="opacity: 1 !important; filter: none !important;">
+                    <h2 style="font-weight: 700; color: var(--main-blue);">
+                        <span class="icon">📄</span> <strong>Arquivos para Conversão</strong>
+                    </h2>
+                </div>
+                """, unsafe_allow_html=True)
             all_options = df_to_process.index.tolist()
             select_all = st.checkbox("Marcar/Desmarcar Todos", key="checkbox_select_all_convert")
 
@@ -1202,11 +1215,13 @@ with tab3:
 
 
     st.markdown("""
-    <div class="fade-in">
-        <h2><span class="icon">🚀</span>Integração Domínio Fiscal</h2>
+    <div class="fade-in" style="opacity: 1 !important; filter: none !important;">
+        <h2 style="font-weight: 700; color: var(--main-blue);">
+            <span class="icon">🚀</span> <strong>Integração Domínio Fiscal</strong>
+        </h2>
         <div class="info-box">
-            <p style="font-family: 'Lato', sans-serif; margin: 0;">
-                <strong></strong> Envie seus XMLs processados automaticamente para o sistema Domínio Fiscal. 
+            <p style="font-family: 'Poppins', sans-serif; margin: 0; font-weight: 700; color: var(--main-blue); opacity: 1 !important; filter: none !important;">
+                Envie automaticamente seus xmls processados para o sistema Domínio Fiscal. 
                 Rápido, seguro e confiável!
             </p>
         </div>
@@ -1340,7 +1355,13 @@ with tab4:
             "Nome do Arquivo": st.session_state.history_data["processed_files"]
         })
 
-        st.markdown("#### ⏱️ Produtividade")
+        st.markdown("""
+            <div class="fade-in" style="opacity: 1 !important; filter: none !important;">
+                <h2 style="font-weight: 700; color: var(--main-blue);">
+                    <span class="icon">⏱️</span> <strong>Produtividade</strong>
+                </h2>
+            </div>
+            """, unsafe_allow_html=True)
         time_saved = st.session_state.history_data.get("time_saved_total", 0)
         
         st.markdown(f"""
@@ -1361,7 +1382,13 @@ with tab4:
 
                     # ≈ R$ {time_saved * 2:.2f} em produtividade
         
-        st.markdown("#### 📋 Histórico de Arquivos Processados:")
+        st.markdown("""
+            <div class="fade-in" style="opacity: 1 !important; filter: none !important;">
+                <h2 style="font-weight: 700; color: var(--main-blue);">
+                    <span class="icon">📋</span> <strong>Histórico de Arquivos Processados:</strong>
+                </h2>
+            </div>
+            """, unsafe_allow_html=True)
         st.dataframe(df_history, use_container_width=True)
 
     else:
