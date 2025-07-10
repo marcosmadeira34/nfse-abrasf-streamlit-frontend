@@ -48,7 +48,8 @@ st.set_page_config(
 )
 
 
-HISTORY_FILE = Path("data/history.json")
+
+
 
 def load_history():
     if HISTORY_FILE.exists():
@@ -135,10 +136,12 @@ def load_custom_css():
     }
 
     .stTabs [data-baseweb="tab-list"] {
+        
         background-color: var(--light-gray-blue);
         border-radius: 10px;
         padding: 0.5rem;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1rem;
     }
 
     .stTabs [data-baseweb="tab"] {
@@ -165,6 +168,7 @@ def load_custom_css():
         border-radius: 15px;
         box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
         transition: all 0.3s ease;
+        margin-bottom: 3rem;
     }
 
     .metric-card:hover {
@@ -221,8 +225,8 @@ def render_main_header():
             """, unsafe_allow_html=True)
 
 # --- Sidebar com Informações do Usuário ---
-# def render_user_sidebar():
-#     show_credits_sidebar()
+def render_user_sidebar():
+    show_credits_sidebar()
 
 # --- Cards de Métricas ---
 def render_metrics_cards():
@@ -260,10 +264,10 @@ def render_metrics_cards():
         """, unsafe_allow_html=True)
     
     with col4:
-        estimated_time_saved = processed_files * 5  # 5 minutos economizados por arquivo
+        estimated_time_saved = processed_files * 3  # 3 minutos economizados por arquivo
         st.markdown(f"""
         <div class="metric-card">
-            <div style="font-size: 2rem, color: #E63946, margin-bottom: 0.5rem;">⏱️</div>
+            <div style="font-size: 2rem; color: #E63946; margin-bottom: 0.5rem;">⏱️</div>
             <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 2rem; color: #1D3557;">{estimated_time_saved}</div>
             <div style="font-family: 'Lato', sans-serif; color: #457B9D;">Minutos Economizados</div>
         </div>
@@ -294,6 +298,7 @@ def load_history():
             "time_saved_total": 0
         }
 
+
 def save_history(history_data):
     HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)  # <- Cria a pasta se não existir
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
@@ -317,7 +322,7 @@ if not StreamlitAuthManager.ensure_authenticated():
 
 # Se chegou até aqui, o usuário está autenticado
 render_main_header()
-# render_user_sidebar()
+render_user_sidebar()
 
 # --- Verifica se deve mostrar a loja de créditos ---
 if st.session_state.get('show_payment_details'):
@@ -338,7 +343,7 @@ render_metrics_cards()
 # --- Diretórios de Upload e Saída ---
 UPLOAD_DIR = Path("data/uploads")
 XML_DIR = Path("data/xmls")
-
+CHUNK_SIZE = 2  # Quantidade máxima de arquivos por requisição
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 XML_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -811,7 +816,28 @@ def simulate_api_send(xml_path):
         return "Erro no Envio", "Falha de conexão com a API."
 
 
-# --- Função para Escutar Notificações em Tempo Real ---
+def upload_files_in_chunks(all_files):
+    """
+    Faz o upload de arquivos para o backend de uma só vez, com barra de progresso.
+    """
+    files_data = {}
+    for file_info in all_files:
+        file_path = Path(file_info["Caminho"])
+        if file_path.exists():
+            with open(file_path, "rb") as f:
+                files_data[file_info["Nome do Arquivo"]] = f.read()
+
+    progress_bar = st.progress(0, text="Enviando arquivos para o backend...")
+
+    response = call_django_backend(
+        endpoint="/upload-e-processar-pdf/",
+        files_data=files_data
+    )
+
+    progress_bar.progress(1.0, text="Upload concluído.")
+    progress_bar.empty()
+
+    return response
 
 
 
@@ -840,17 +866,19 @@ with tab1:
     with st.expander("⬆️ Enviar arquivos PDF"):
         uploaded_files = st.file_uploader(
             "Selecione os arquivos de notas fiscais (PDF):",
-            type=["pdf"],
             accept_multiple_files=True,
+            type=["pdf"],
             help="Você pode enviar um ou vários arquivos de uma vez.",
             key="pdf_uploader"
         )
-        MAX_FILES = 30
+
+        
+        MAX_FILES = 150
 
         if uploaded_files:
             if len(uploaded_files) > MAX_FILES:
                 st.warning(f"⚠️ Você enviou {len(uploaded_files)} arquivos, mas o limite é de {MAX_FILES}. Apenas os primeiros {MAX_FILES} arquivos serão processados.")
-                uploaded_files = uploaded_files[:MAX_FILES]  # Mantém os 30 primeiros
+                uploaded_files = uploaded_files[:MAX_FILES]  # Mantém os 150 primeiros
 
             new_uploads_count = 0
             for f in uploaded_files:
@@ -880,6 +908,19 @@ with tab1:
                 
             if new_uploads_count > 0:
                 st.success(f"{new_uploads_count} arquivo(s) salvo(s) com sucesso!")
+                
+                # ✅ Reseta status dos arquivos recém enviados
+                for i, file_info in enumerate(st.session_state.uploaded_files_info):
+                    if file_info["Status"] not in ["Carregado"]:
+                        st.session_state.uploaded_files_info[i]["Status"] = "Carregado"
+                        st.session_state.uploaded_files_info[i]["XML Gerado"] = "-"
+                        st.session_state.uploaded_files_info[i]["Status Envio"] = "-"
+                        st.session_state.uploaded_files_info[i]["Detalhes"] = ""
+
+                # Atualiza seleção automática para multiselect
+                st.session_state['selected_files_indices'] = list(range(len(st.session_state.uploaded_files_info)))
+
+                
 
 
 # --- TAB 2: Processar & Converter ---
@@ -926,6 +967,9 @@ with tab2:
                 key="multiselect_convert_pdfs"
             )
 
+            # Salva seleção atual
+            st.session_state['selected_files_indices'] = selected_files_indices
+
             if st.button("Converter PDFs Selecionados para XML", key="btn_convert_pdfs"):
                 if selected_files_indices:
                     # Verifica créditos BASEADO NO NÚMERO DE ARQUIVOS SELECIONADOS
@@ -950,61 +994,70 @@ with tab2:
                         st.stop()
                     
                     # Mostra confirmação DETALHADA de consumo
-                    st.info(f"""
-                    ℹ️ **Confirmação de Créditos**
+                    # st.info(f"""
+                    # ℹ️ **Confirmação de Créditos**
                     
-                    - **Arquivos a processar:** {len(selected_files_indices)}
-                    - **Créditos que serão consumidos:** {credit_check['required']}
-                    - **Seus créditos atuais:** {credit_check['current_balance']}
-                    - **Créditos restantes após processamento:** {credit_check['remaining_after']}
+                    # - **Arquivos a processar:** {len(selected_files_indices)}
+                    # - **Créditos que serão consumidos:** {credit_check['required']}
+                    # - **Seus créditos atuais:** {credit_check['current_balance']}
+                    # - **Créditos restantes após processamento:** {credit_check['remaining_after']}
                     
-                    💡 **Importante:** Os créditos serão debitados ANTES do processamento iniciar.
-                    """)
+                    # 💡 **Importante:** Os créditos serão debitados ANTES do processamento iniciar.
+                    # """)
                     
                     selected_files = [st.session_state.uploaded_files_info[i] for i in selected_files_indices]
-                    
-                    # Prepara os arquivos para envio
-                    files_dict = {}
-                    for file_info in selected_files:
-                        # Lê o arquivo do disco
-                        file_path = Path(file_info["Caminho"])
-                        if file_path.exists():
-                            with open(file_path, "rb") as f:
-                                files_dict[file_info["Nome do Arquivo"]] = f.read()
-                    
+
                     with st.spinner("🚀 Enviando arquivos para processamento..."):
-                        response = call_django_backend("/upload-e-processar-pdf/", files_data=files_dict)
-                    
+                        response = upload_files_in_chunks(selected_files)
+                        
+                        st.session_state.upload_responses = response
+                        # logger.info(f"Arquivos Processados: {response.get('files_count', 0)}, Créditos Usados: {response.get('credits_used', 0)}")
+
+                    # ✅ Exibe as respostas de todos os chunks:
                     if response:
-                        if response.get("success"):
-                            # CORRIGIDO: Agora recebemos um único task_id
-                            task_id = response.get("task_id")  # Em vez de task_ids
-                            merge_id = response.get("merge_id", "")
-                            
-                            st.session_state.task_status = {
-                                "task_id": task_id,  # Único task_id
-                                "merge_id": merge_id,
-                                "files_count": response.get("files_count", len(selected_files)),
-                                "credits_used": response.get("credits_used", len(selected_files)),
-                                "remaining_credits": response.get("remaining_credits", 0)
-                            }
-                            
-                            # st.success(f"""
-                            # ✅ **Processamento Iniciado com Sucesso!**
-                            
-                            # - **Arquivos enviados:** {len(selected_files)}
-                            # - **Créditos consumidos:** {response.get('credits_used', len(selected_files))}
-                            # - **Créditos restantes:** {response.get('remaining_credits', 0)}
-                            # - **Task ID:** {task_id}
-                            
-                            # ⏳ Aguarde o processamento ser concluído...
-                            # """)
-                            
-                            st.rerun()
-                        else:
-                            st.error(f"❌ Erro no processamento: {response.get('error', 'Erro desconhecido')}")
+                        resp = response    
+                        #st.success("✅ Todos os chunks foram enviados com sucesso!")
+                        #st.write("Respostas das tasks Celery:")
+                        # for idx, resp in enumerate(response, 1):
+                        #     #st.json({f"Chunk {idx}": resp})
+                        #     # Exibe o total de arquivos processados e créditos usados
+                        #     logger.info(f"Chunk {idx} - Arquivos Processados: {resp.get('files_count', 0)}, Créditos Usados: {resp.get('credits_used', 0)}")
+                        # ✅ Agora somamos e consolidamos os resultados de todos os chunks:
+                        total_credits_used = 0
+                        total_files_processed = 0
+                        all_task_ids = []
+                        all_merge_ids = []
+
+                        
+                        if resp.get("success"):
+                            total_credits_used += resp.get("credits_used", 0)
+                            total_files_processed += resp.get("files_count", 0)
+                            all_task_ids = [resp.get("task_id")]
+                            all_merge_ids = [resp.get("merge_id")]
+
+                        # ✅ Limpa flag de tarefas concluídas antes de novo processamento
+                        st.session_state.pop("task_status_completed", None)
+
+                        # ✅ Salva no session_state para monitorar depois:
+                        st.session_state.task_status = {
+                            "task_ids": all_task_ids,  # Agora uma lista de task_ids
+                            "merge_ids": all_merge_ids,
+                            "total_files": total_files_processed,
+                            "total_credits": total_credits_used
+                        }
+
+                        # st.success(f"""
+                        # ✅ Processamento iniciado com sucesso!
+                        
+                        # - 🔢 Total de arquivos enviados: {total_files_processed}
+                        # - 💰 Créditos consumidos: {total_credits_used}
+                        # - 📋 Tasks Celery criadas: {len(all_task_ids)}
+                        # """)
+
+                        
+
                     else:
-                        st.error("❌ Falha na comunicação com o backend para iniciar o processamento. Verifique logs.")
+                        st.error("❌ Falha ao enviar os arquivos para o backend.")
 
     # Seção de Status - SEMPRE EXIBIDA (fora dos if/else anteriores)
     # st.markdown("---")
@@ -1015,136 +1068,127 @@ with tab2:
     # else:
     #     st.info("Nenhum arquivo carregado ainda.")
 
+    # Limpa o estado de tarefas concluídas, se necessário
+    #st.session_state.pop("task_status_completed", None)
+
+
     # Verificação de status de tarefas em andamento
-    if "task_status" in st.session_state and st.session_state.task_status:
-        task_id = st.session_state.task_status["task_id"]
-        
-        with st.spinner("🔄 Verificando status do processamento..."):
-            status_response = call_django_backend(f"/task-status/{task_id}/", method="GET")
-        
-        if status_response:
-            state = status_response.get("state", "UNKNOWN")
-            
-            if state == "SUCCESS":
-                st.success("✅ Processamento concluído com sucesso!")
-                
-                meta = status_response.get("meta", {})
-                arquivos_resultado = meta.get("arquivos_resultado", {})
-                zip_id = meta.get("zip_id")
-                erros = meta.get("erros", [])
-                
-                # Log para debug
-                st.write("**Debug - Tipo de arquivos_resultado:**", type(arquivos_resultado))
-                st.write("**Debug - Chaves:**", list(arquivos_resultado.keys()) if isinstance(arquivos_resultado, dict) else "Não é dict")
-                
-                if arquivos_resultado and isinstance(arquivos_resultado, dict):
-                    # Armazena XMLs corretamente
-                    st.session_state.xmls_gerados = {}
-                    
-                    for file_name, xml_content in arquivos_resultado.items():
-                        if isinstance(xml_content, str):
-                            # Verifica se é XML válido
-                            if xml_content.strip().startswith('<?xml') or xml_content.strip().startswith('<'):
-                                st.session_state.xmls_gerados[file_name] = xml_content
-                                st.write(f"✅ XML válido para {file_name} (tamanho: {len(xml_content)} chars)")
+    if "task_status" in st.session_state and st.session_state.task_status and not st.session_state.get("task_status_completed"):
+        task_ids = st.session_state.task_status.get("task_ids", [])
+        rerun_needed = False
+
+        for task_id in task_ids:
+            with st.spinner(f"🔄 Verificando status da task {task_id}..."):
+                status_response = call_django_backend(f"/task-status/{task_id}/", method="GET")
+                #print(f"Status Response: {status_response}")  # Log para debug
+
+            if status_response:
+                state = status_response.get("state", "UNKNOWN")
+
+                if state == "SUCCESS":
+                    st.success("✅ Processamento concluído com sucesso!")
+
+                    meta = status_response.get("meta", {})
+                    arquivos_resultado = meta.get("arquivos_resultado", {})
+                    zip_id = meta.get("zip_id")
+                    erros = meta.get("erros", [])
+
+                    if arquivos_resultado and isinstance(arquivos_resultado, dict):
+                        if "xmls_gerados" not in st.session_state:
+                             st.session_state.xmls_gerados = {}
+
+                        for file_name, xml_content in arquivos_resultado.items():
+                            if isinstance(xml_content, str):
+                                if xml_content.strip().startswith('<?xml') or xml_content.strip().startswith('<'):
+                                    st.session_state.xmls_gerados[file_name] = xml_content
+                                    #st.write(f"✅ XML válido para {file_name} (tamanho: {len(xml_content)} chars)")
+                                else:
+                                    st.error(f"❌ XML inválido para {file_name}: não começa com '<'")
+                                    #st.write(f"Conteúdo recebido: {xml_content[:150]}...")
                             else:
-                                st.error(f"❌ XML inválido para {file_name}: não começa com '<'")
-                                st.write(f"Conteúdo recebido: {xml_content[:30]}...")
-                        else:
-                            st.error(f"❌ Formato incorreto para {file_name}: {type(xml_content)}")
-                    
-                    # Atualiza status dos arquivos processados
-                    for file_name, xml_content in arquivos_resultado.items():
-                        for i, file_info in enumerate(st.session_state.uploaded_files_info):
-                            if file_info["Nome do Arquivo"] == file_name:
-                                st.session_state.uploaded_files_info[i]["Status"] = "Concluído"
-                                st.session_state.uploaded_files_info[i]["XML Gerado"] = "Sim"
-                                st.session_state.uploaded_files_info[i]["XML Content"] = xml_content  # <-- ESSENCIAL
+                                st.error(f"❌ Formato incorreto para {file_name}: {type(xml_content)}")
 
-                                # Adiciona no histórico persistente
-                                if file_name not in st.session_state.history_data["processed_files"]:
-                                    st.session_state.history_data["processed_files"].append(file_name)
-                                    st.session_state.history_data["time_saved_total"] += 3  # 3 min por arquivo processado
-                
-                    save_history(st.session_state.history_data)  # Salva o histórico no disco
-                
-                if zip_id:
-                    st.session_state.zip_id = zip_id
-                
-                if erros:
-                    st.warning(f"⚠️ Alguns arquivos tiveram problemas: {erros}")
-                
-                # Limpa o status da tarefa
-                del st.session_state.task_status
-                st.rerun()
-                
-            elif state == "FAILURE":
-                st.error("❌ Erro no processamento!")
-                error_message = status_response.get("meta", {}).get("error", "Erro desconhecido")
-                st.error(f"Detalhes: {error_message}")
-                
-                # Limpa o status da tarefa
-                del st.session_state.task_status
-                
-            elif state in ["PENDING", "STARTED"]:
-                st.info(f"⏳ Status: {state} - Processando arquivos...")
-                time.sleep(2)
-                st.rerun()
-            else:
-                st.warning(f"⚠️ Status desconhecido: {state}")
+                        for file_name, xml_content in arquivos_resultado.items():
+                            for i, file_info in enumerate(st.session_state.uploaded_files_info):
+                                if file_info["Nome do Arquivo"] == file_name:
+                                    st.session_state.uploaded_files_info[i]["Status"] = "Concluído"
+                                    st.session_state.uploaded_files_info[i]["XML Gerado"] = "Sim"
+                                    st.session_state.uploaded_files_info[i]["XML Content"] = xml_content
 
-    # Botões de download corrigidos:
+                                    if file_name not in st.session_state.history_data["processed_files"]:
+                                        st.session_state.history_data["processed_files"].append(file_name)
+                                        st.session_state.history_data["time_saved_total"] += 3
+
+                        save_history(st.session_state.history_data)
+
+                    if "zip_ids" not in st.session_state:
+                        st.session_state.zip_ids = []
+                    st.session_state.zip_ids.append(zip_id)
+
+                    if erros:
+                        st.warning(f"⚠️ Alguns arquivos tiveram problemas: {erros}")
+
+                    # ✅ ALTERAÇÃO 2: adicione este flag para indicar que terminou
+                    st.session_state.task_status_completed = True
+                    rerun_needed = True
+
+                elif state in ["PENDING", "STARTED"]:
+                    st.info(f"⏳ Status: {state} - Processando arquivos...")
+                    rerun_needed = True
+                
+                elif state == "FAILURE":
+                    st.error("❌ Erro no processamento!")
+                    error_message = status_response.get("meta", {}).get("error", "Erro desconhecido")
+                    st.error(f"Detalhes: {error_message}")
+                    rerun_needed = True
+
+                
+                else:
+                    st.warning(f"⚠️ Status desconhecido: {state}")
+
+        if rerun_needed:
+            time.sleep(2)
+            st.rerun()
+
+    # ✅ NENHUMA MUDANÇA NOS BOTÕES: eles já vão funcionar normalmente após a task terminar.
     if st.session_state.get('xmls_gerados'):
         st.markdown("---")
-        st.markdown("### 📄 XMLs Gerados:")
-        
+        # st.markdown("### 📄 XMLs Gerados:")
         xmls_gerados = st.session_state.get('xmls_gerados', {})
-        
-        if isinstance(xmls_gerados, dict) and xmls_gerados:
-            for file_name, xml_content in xmls_gerados.items():
-                
-                # Verifica se é string válida
-                if isinstance(xml_content, str) and xml_content.strip():
-                    
-                    # Verifica se é XML válido
-                    if xml_content.strip().startswith('<?xml') or xml_content.strip().startswith('<'):
-                        
-                        # Mostra preview do XML
-                        # with st.expander(f"📄 Preview: {file_name}"):
-                        #     st.code(xml_content[:500] + "..." if len(xml_content) > 500 else xml_content, language="xml")
-                        
-                        # Botão de download
-                        button_key = f"download_btn_{file_name}_{len(xml_content)}"
-                        
-                        st.download_button(
-                            label=f"📅 Baixar XML - {file_name.replace('.pdf', '.xml')}",
-                            data=xml_content,
-                            file_name=file_name.replace('.pdf', '.xml'),
-                            mime="application/xml",
-                            key=button_key
-                        )
-                    else:
-                        st.error(f"❌ XML inválido para {file_name}: não é XML válido")
-                        st.code(xml_content[:200], language="text")
-                else:
-                    st.error(f"❌ Conteúdo inválido para {file_name}: {type(xml_content)}")
-        else:
-            st.warning("⚠️ Nenhum XML válido encontrado.")
+        # if isinstance(xmls_gerados, dict) and xmls_gerados:
+        #     for file_name, xml_content in xmls_gerados.items():
+        #         if isinstance(xml_content, str) and xml_content.strip():
+        #             if xml_content.strip().startswith('<?xml') or xml_content.strip().startswith('<'):
+        #                 button_key = f"download_btn_{file_name}_{len(xml_content)}"
+        #                 st.download_button(
+        #                     label=f"📅 Baixar XML - {file_name.replace('.pdf', '.xml')}",
+        #                     data=xml_content,
+        #                     file_name=file_name.replace('.pdf', '.xml'),
+        #                     mime="application/xml",
+        #                     key=button_key
+        #                 )
+        #             else:
+        #                 st.error(f"❌ XML inválido para {file_name}: não é XML válido")
+        #                 st.code(xml_content[:200], language="text")
+        #         else:
+        #             st.error(f"❌ Conteúdo inválido para {file_name}: {type(xml_content)}")
+        # else:
+        #     st.warning("⚠️ Nenhum XML válido encontrado.")
 
-    if 'zip_id' in st.session_state:
-        st.markdown("### 📦 Baixar todos os XMLs em um único ZIP")
-        download_url = f"{DJANGO_BACKEND_URL}/download-zip/{st.session_state['zip_id']}/"
-
-        st.markdown(
-            f"""
-            <a href="{download_url}" target="_blank">
-                <button style="background-color:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;">
-                    📅 Baixar ZIP
-                </button>
-            </a>
-            """,
-            unsafe_allow_html=True
-        )
+    if 'zip_ids' in st.session_state:
+        st.markdown("### Baixar arquivos gerados")
+        for i, zip_id in enumerate(st.session_state.zip_ids, 1):
+            download_url = f"{DJANGO_BACKEND_URL}/download-zip/{zip_id}/"
+            st.markdown(
+                f"""
+                <a href="{download_url}" target="_blank">
+                    <button style="background-color:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer;margin-bottom:0.5rem;">
+                        📦 Baixar ZIP {i}
+                    </button>
+                </a>
+                """,
+                unsafe_allow_html=True
+            )
 
 
 # --- TAB 3: Enviar para API ---
