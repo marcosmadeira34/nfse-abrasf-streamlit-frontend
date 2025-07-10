@@ -1146,7 +1146,7 @@ with tab2:
                     rerun_needed = True
 
                 elif state in ["PENDING", "STARTED"]:
-                    st.info(f"⏳ Status: {state} - Processando arquivos...")
+                    st.info(f"⏳ Status: {state} - Aguarde processar os arquivos...")
                     rerun_needed = True
                 
                 elif state == "FAILURE":
@@ -1189,7 +1189,13 @@ with tab2:
         #     st.warning("⚠️ Nenhum XML válido encontrado.")
 
     if 'zip_ids' in st.session_state:
-        st.markdown("### Baixar arquivos gerados")
+        st.markdown("""
+            <div class="fade-in" style="opacity: 1 !important; filter: none !important;">
+                <h2 style="font-weight: 700; color: var(--main-blue);">
+                    <span class="icon">📋</span> <strong>Baixar arquivos gerados:</strong>
+                </h2>
+            </div>
+            """, unsafe_allow_html=True)
         for i, zip_id in enumerate(st.session_state.zip_ids, 1):
             download_url = f"{DJANGO_BACKEND_URL}/download-zip/{zip_id}/"
             st.markdown(
