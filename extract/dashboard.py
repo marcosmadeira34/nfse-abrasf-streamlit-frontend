@@ -83,6 +83,7 @@ def load_custom_css():
         --patrimonium-color: #1A3375;
         --patrimonium-green: #00FCA8;
         --patrimonium-card: #edfcf1
+        --dark-blue: #1A3375;
     }
 
     body, [data-testid="stAppViewContainer"] {
@@ -121,7 +122,7 @@ def load_custom_css():
     h3 { font-size: 1.4rem; }
 
     .stButton button {
-    background-color: var(--main-blue);
+    background-color: var(--patrimonium-color);
     color: var(--pure-white);
     border: none;
     border-radius: 25px;
@@ -132,14 +133,14 @@ def load_custom_css():
 }
 
     .stButton button:hover {
-        background-color: var(--accent-blue);
-        color: var(--pure-white);
+        background-color: var(--patrimonium-green);
+        color: var(--dark-blue);
         transform: translateY(-2px);
     }
 
     .stButton button:active,
     .stButton button:focus {
-        background-color: var(--accent-blue);
+        background-color: var(--patrimonium-green);
         color: var(--pure-white);
     }
                 
