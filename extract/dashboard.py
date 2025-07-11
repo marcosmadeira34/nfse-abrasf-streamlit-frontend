@@ -886,12 +886,12 @@ with tab1:
         )
 
         
-        MAX_FILES = 40
+        MAX_FILES = 150
 
         if uploaded_files:
             if len(uploaded_files) > MAX_FILES:
                 st.warning(f"⚠️ Você enviou {len(uploaded_files)} arquivos, mas o limite é de {MAX_FILES}. Apenas os primeiros {MAX_FILES} arquivos serão processados.")
-                uploaded_files = uploaded_files[:MAX_FILES]  # Mantém os 40 primeiros
+                uploaded_files = uploaded_files[:MAX_FILES]  # Mantém os 150 primeiros
 
             new_uploads_count = 0
             for f in uploaded_files:
@@ -1120,7 +1120,7 @@ with tab2:
                                     #st.write(f"✅ XML válido para {file_name} (tamanho: {len(xml_content)} chars)")
                                 else:
                                     st.error(f"❌ XML inválido para {file_name}: não começa com '<'")
-                                    #st.write(f"Conteúdo recebido: {xml_content[:40]}...")
+                                    #st.write(f"Conteúdo recebido: {xml_content[:150]}...")
                             else:
                                 st.error(f"❌ Formato incorreto para {file_name}: {type(xml_content)}")
 
