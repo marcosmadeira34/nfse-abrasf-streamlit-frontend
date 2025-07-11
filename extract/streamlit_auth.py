@@ -20,45 +20,6 @@ if not cookies.ready():
 # Configura tempo de expiração do login (em segundos)
 LOGIN_EXPIRATION_SECONDS = 1800 # 1/5 hora
 
-def load_auth_from_cookies():
-    """Carrega autenticação a partir dos cookies"""
-    access_token = cookies.get("access_token")
-    refresh_token = cookies.get("refresh_token")
-    user_info_str = cookies.get("user_info")
-    login_timestamp = cookies.get("login_time")
-
-    if not (access_token and refresh_token and user_info_str and login_timestamp):
-        clear_authentication()
-        return
-
-    # Verifica expiração
-    try:
-        elapsed = datetime.utcnow().timestamp() - float(login_timestamp)
-        if elapsed > LOGIN_EXPIRATION_SECONDS:
-            StreamlitAuthManager.logout()  # Expirou, forçar logout
-            return
-    except (ValueError, TypeError):
-        StreamlitAuthManager.logout()
-        return
-
-    # Login válido
-    st.session_state.authenticated = True
-    st.session_state.access_token = access_token
-    st.session_state.refresh_token = refresh_token
-    try:
-        st.session_state.user_info = json.loads(user_info_str)
-    except json.JSONDecodeError:
-        st.session_state.user_info = None
-
-def clear_authentication():
-    """Limpa a autenticação da sessão"""
-    st.session_state.authenticated = False
-    st.session_state.access_token = None
-    st.session_state.refresh_token = None
-    st.session_state.user_info = None
-
-if "authenticated" not in st.session_state:
-    load_auth_from_cookies()
 
 
 class StreamlitAuthManager:
@@ -432,4 +393,46 @@ def require_auth(func):
         return func(*args, **kwargs)
     
     return wrapper
+
+
+def load_auth_from_cookies():
+    """Carrega autenticação a partir dos cookies"""
+    access_token = cookies.get("access_token")
+    refresh_token = cookies.get("refresh_token")
+    user_info_str = cookies.get("user_info")
+    login_timestamp = cookies.get("login_time")
+
+    if not (access_token and refresh_token and user_info_str and login_timestamp):
+        clear_authentication()
+        return
+
+    # Verifica expiração
+    try:
+        elapsed = datetime.utcnow().timestamp() - float(login_timestamp)
+        if elapsed > LOGIN_EXPIRATION_SECONDS:
+            StreamlitAuthManager.logout()  # Expirou, forçar logout
+            return
+    except (ValueError, TypeError):
+        StreamlitAuthManager.logout()
+        return
+
+    # Login válido
+    st.session_state.authenticated = True
+    st.session_state.access_token = access_token
+    st.session_state.refresh_token = refresh_token
+    try:
+        st.session_state.user_info = json.loads(user_info_str)
+    except json.JSONDecodeError:
+        st.session_state.user_info = None
+
+def clear_authentication():
+    """Limpa a autenticação da sessão"""
+    st.session_state.authenticated = False
+    st.session_state.access_token = None
+    st.session_state.refresh_token = None
+    st.session_state.user_info = None
+
+if "authenticated" not in st.session_state:
+    load_auth_from_cookies()
+
 
