@@ -18,7 +18,7 @@ import threading
 
 
 # --- Importações do sistema de autenticação ---
-from streamlit_auth import StreamlitAuthManager, require_auth, show_login_page
+from streamlit_auth import StreamlitAuthManager, show_login_page, load_auth_from_cookies
 from streamlit_credits import show_credits_sidebar, show_credit_store, show_payment_details, CreditManager
 # from homepage import get_homepage_html
 
@@ -287,7 +287,7 @@ def render_metrics_cards():
 
 
 # --- Inicialização do Sistema de Autenticação ---
-StreamlitAuthManager.initialize_session_state()
+load_auth_from_cookies()
 
 # get_homepage_html()  # Carrega a homepage HTML customizada
 

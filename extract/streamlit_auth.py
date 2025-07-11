@@ -5,248 +5,190 @@ from typing import Optional, Dict, Any
 import os
 import time
 from streamlit_cookies_manager import EncryptedCookieManager
+from datetime import datetime
 
 
 # Configurações do backend Django
 DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
 
 # Inicializa o gerenciador de cookies (a senha deve ser secreta e complexa)
+# Inicializa o gerenciador de cookies
 cookies = EncryptedCookieManager(prefix="myapp_", password="uma_senha_bem_complexa_123")
 if not cookies.ready():
     st.stop()
 
-# --- Inicializa session_state com dados dos cookies ---
+# Configura tempo de expiração do login (em segundos)
+LOGIN_EXPIRATION_SECONDS = 1800 # 1/5 hora
+
 def load_auth_from_cookies():
+    """Carrega autenticação a partir dos cookies"""
     access_token = cookies.get("access_token")
     refresh_token = cookies.get("refresh_token")
     user_info_str = cookies.get("user_info")
+    login_timestamp = cookies.get("login_time")
 
-    if access_token and refresh_token and user_info_str:
-        st.session_state.authenticated = True
-        st.session_state.access_token = access_token
-        st.session_state.refresh_token = refresh_token
-        try:
-            st.session_state.user_info = json.loads(user_info_str)
-        except json.JSONDecodeError:
-            st.session_state.user_info = None
-    else:
-        st.session_state.authenticated = False
-        st.session_state.access_token = None
-        st.session_state.refresh_token = None
+    if not (access_token and refresh_token and user_info_str and login_timestamp):
+        clear_authentication()
+        return
+
+    # Verifica expiração
+    try:
+        elapsed = datetime.utcnow().timestamp() - float(login_timestamp)
+        if elapsed > LOGIN_EXPIRATION_SECONDS:
+            StreamlitAuthManager.logout()  # Expirou, forçar logout
+            return
+    except (ValueError, TypeError):
+        StreamlitAuthManager.logout()
+        return
+
+    # Login válido
+    st.session_state.authenticated = True
+    st.session_state.access_token = access_token
+    st.session_state.refresh_token = refresh_token
+    try:
+        st.session_state.user_info = json.loads(user_info_str)
+    except json.JSONDecodeError:
         st.session_state.user_info = None
 
-# Inicializa no começo da aplicação
+def clear_authentication():
+    """Limpa a autenticação da sessão"""
+    st.session_state.authenticated = False
+    st.session_state.access_token = None
+    st.session_state.refresh_token = None
+    st.session_state.user_info = None
+
 if "authenticated" not in st.session_state:
     load_auth_from_cookies()
 
 
 class StreamlitAuthManager:
     """Gerenciador de autenticação para Streamlit"""
-    
-    @staticmethod
-    def initialize_session_state():
-        if "authenticated" not in st.session_state:
-            load_auth_from_cookies()
 
-    
     @staticmethod
     def login(username: str, password: str) -> tuple[bool, str]:
-        """
-        Realiza login no backend Django
-        
-        Args:
-            username: Nome de usuário
-            password: Senha
-            
-        Returns:
-            Tuple (sucesso, mensagem)
-        """
+        """Realiza login no backend Django"""
         try:
             response = requests.post(
                 f"{DJANGO_BACKEND_URL}/auth/login/",
-                json={
-                    'username': username,
-                    'password': password
-                },
+                json={'username': username, 'password': password},
                 timeout=30
             )
-            
             if response.status_code == 200:
                 data = response.json()
-                
-                # Armazena tokens e informações do usuário na sessão
+
+                # Armazena tokens e infos na sessão
                 st.session_state.authenticated = True
                 st.session_state.access_token = data['tokens']['access_token']
                 st.session_state.refresh_token = data['tokens']['refresh_token']
                 st.session_state.user_info = data['user']
-                
-               
-                # Armazena tokens nos cookies
+
+                # Armazena também nos cookies
                 cookies["access_token"] = data['tokens']['access_token']
                 cookies["refresh_token"] = data['tokens']['refresh_token']
                 cookies["user_info"] = json.dumps(data['user'])
-
+                cookies["login_time"] = str(datetime.utcnow().timestamp())  # Marca o horário de login
                 cookies.save()
 
                 return True, "Login realizado com sucesso!"
-            
             elif response.status_code == 401:
-                error_data = response.json()
-                return False, error_data.get('error', 'Credenciais inválidas')
-            
+                return False, response.json().get('error', 'Credenciais inválidas')
             else:
                 return False, f"Erro no servidor: {response.status_code}"
-                
-        except requests.exceptions.RequestException as e:
+        except requests.RequestException as e:
             return False, f"Erro de conexão: {str(e)}"
         except Exception as e:
             return False, f"Erro inesperado: {str(e)}"
-    
+
     @staticmethod
     def logout():
-        """Realiza logout e limpa a sessão"""
+        """Realiza logout completo"""
         try:
             if st.session_state.get('access_token'):
                 requests.post(
                     f"{DJANGO_BACKEND_URL}/auth/logout/",
-                    headers={
-                        'Authorization': f"Bearer {st.session_state.access_token}"
-                    },
+                    headers={'Authorization': f"Bearer {st.session_state.access_token}"},
                     timeout=10
                 )
         except:
-            pass  # Ignora erros de logout no backend
-        
-        # Limpa o estado da sessão
-        st.session_state.authenticated = False
-        st.session_state.access_token = None
-        st.session_state.refresh_token = None
-        st.session_state.user_info = None
+            pass  # Ignora erros no backend
 
-        # Remove cookies
+        # Limpa sessão e cookies
+        clear_authentication()
         cookies["access_token"] = ""
         cookies["refresh_token"] = ""
         cookies["user_info"] = ""
+        cookies["login_time"] = ""
         cookies.save()
-    
+
     @staticmethod
     def verify_token() -> bool:
-        """
-        Verifica se o token atual é válido
-        
-        Returns:
-            True se o token é válido, False caso contrário
-        """
+        """Verifica se o token atual é válido"""
         if not st.session_state.get('access_token'):
             return False
-        
         try:
             response = requests.post(
                 f"{DJANGO_BACKEND_URL}/auth/verify/",
-                headers={
-                    'Authorization': f"Bearer {st.session_state.access_token}"
-                },
+                headers={'Authorization': f"Bearer {st.session_state.access_token}"},
                 timeout=10
             )
-            
             return response.status_code == 200
-            
         except:
             return False
-    
+
     @staticmethod
     def refresh_token() -> bool:
-        """
-        Renova o access token usando o refresh token
-        
-        Returns:
-            True se a renovação foi bem-sucedida, False caso contrário
-        """
+        """Renova o access token usando o refresh token"""
         if not st.session_state.get('refresh_token'):
             return False
-        
         try:
             response = requests.post(
                 f"{DJANGO_BACKEND_URL}/auth/refresh/",
-                json={
-                    'refresh_token': st.session_state.refresh_token
-                },
+                json={'refresh_token': st.session_state.refresh_token},
                 timeout=30
             )
-            
             if response.status_code == 200:
                 data = response.json()
                 st.session_state.access_token = data['tokens']['access_token']
+
+                # Atualiza cookie
+                cookies["access_token"] = data['tokens']['access_token']
+                cookies.save()
                 return True
-            
             return False
-            
         except:
             return False
-    
+
     @staticmethod
-    def ensure_authenticated():
-        """
-        Garante que o usuário está autenticado, renovando o token se necessário
-        
-        Returns:
-            True se autenticado, False caso contrário
-        """
+    def ensure_authenticated() -> bool:
+        """Garante que o usuário está autenticado"""
         if not st.session_state.get('authenticated'):
             return False
-        
-        # Verifica se o token atual é válido
         if StreamlitAuthManager.verify_token():
             return True
-        
-        # Tenta renovar o token
         if StreamlitAuthManager.refresh_token():
             return True
-        
-        # Se não conseguiu renovar, faz logout
         StreamlitAuthManager.logout()
         return False
-    
+
     @staticmethod
     def get_auth_headers() -> Dict[str, str]:
-        """
-        Retorna headers de autenticação para requisições
-        
-        Returns:
-            Dict com headers de autenticação
-        """
+        """Headers de autenticação"""
         if st.session_state.get('access_token'):
-            return {
-                'Authorization': f"Bearer {st.session_state.access_token}"
-            }
+            return {'Authorization': f"Bearer {st.session_state.access_token}"}
         return {}
-    
+
     @staticmethod
     def authenticated_request(method: str, endpoint: str, **kwargs) -> Optional[requests.Response]:
-        """
-        Faz uma requisição autenticada ao backend Django
-        
-        Args:
-            method: Método HTTP (GET, POST, etc.)
-            endpoint: Endpoint da API
-            **kwargs: Argumentos adicionais para requests
-            
-        Returns:
-            Response object ou None se não autenticado
-        """
+        """Faz uma requisição autenticada"""
         if not StreamlitAuthManager.ensure_authenticated():
-            st.error("Sessão expirada. Por favor, faça login novamente.")
+            st.error("Sessão expirada. Faça login novamente.")
             return None
-        
-        # Adiciona headers de autenticação
         headers = kwargs.get('headers', {})
         headers.update(StreamlitAuthManager.get_auth_headers())
         kwargs['headers'] = headers
-        
         try:
             url = f"{DJANGO_BACKEND_URL}{endpoint}"
-            response = getattr(requests, method.lower())(url, **kwargs)
-            return response
+            return getattr(requests, method.lower())(url, **kwargs)
         except Exception as e:
             st.error(f"Erro na requisição: {str(e)}")
             return None
