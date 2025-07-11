@@ -237,8 +237,8 @@ def render_main_header():
             """, unsafe_allow_html=True)
 
 # --- Sidebar com Informações do Usuário ---
-# def render_user_sidebar():
-#     show_credits_sidebar()
+def render_user_sidebar():
+    show_credits_sidebar()
 
 # --- Cards de Métricas ---
 def render_metrics_cards():
@@ -334,7 +334,7 @@ if not StreamlitAuthManager.ensure_authenticated():
 
 # Se chegou até aqui, o usuário está autenticado
 render_main_header()
-# render_user_sidebar()
+render_user_sidebar()
 
 # --- Verifica se deve mostrar a loja de créditos ---
 if st.session_state.get('show_payment_details'):
