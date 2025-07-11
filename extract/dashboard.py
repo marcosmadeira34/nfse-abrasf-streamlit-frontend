@@ -80,6 +80,9 @@ def load_custom_css():
         --main-blue: #274C77;
         --accent-blue: #A3CEF1;
         --highlight-gold: #E6B800;
+        --patrimonium-color: #1A3375;
+        --patrimonium-green: #00FCA8;
+        --patrimonium-card: #edfcf1
     }
 
     body, [data-testid="stAppViewContainer"] {
@@ -89,7 +92,7 @@ def load_custom_css():
     }
 
     .main-header {
-        background-color: var(--main-blue);
+        background-color: var(--patrimonium-color);
         padding: 2rem;
         border-radius: 12px;
         margin-bottom: 2rem;
@@ -139,6 +142,7 @@ def load_custom_css():
         background-color: var(--accent-blue);
         color: var(--pure-white);
     }
+                
 
     .stTabs [data-baseweb="tab-list"] {
     background-color: var(--soft-light-gray);
@@ -165,11 +169,11 @@ def load_custom_css():
 
     .stTabs [aria-selected="true"] {
         background-color: var(--main-blue);
-        color: var(--pure-white);
+        color: var(--patrimonium-green);
     }
 
     .metric-card {
-        background-color: var(--pure-white);
+        background-color: var(--patrimonium-card);
         border-left: 4px solid var(--main-blue);
         padding: 1.5rem;
         border-radius: 15px;
@@ -866,9 +870,7 @@ with tab1:
         </h2>
         <div class="info-box">
             <p style="font-family: 'Poppins', sans-serif; margin: 0; font-weight: 700; color: var(--main-blue); opacity: 1 !important; filter: none !important;">
-                <strong>💡 Dica:</strong> Arraste e solte seus arquivos PDF ou use o botão abaixo. 
-                Nossa IA processará automaticamente os dados com precisão!
-            </p>
+                <strong>💡 Dica:</strong> Arraste e solte seus arquivos PDF ou use o botão abaixo.</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
