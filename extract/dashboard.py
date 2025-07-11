@@ -858,7 +858,7 @@ if 'uploaded_files_info' not in st.session_state:
 
 
 # --- Abas para Organização do Fluxo ---
-tab1, tab2, tab3, tab4 = st.tabs(["1 - Importar PDFs", "2 - Revisar & Converter", "3 - Lançamento Automático", "📊 Histórico"])
+tab1, tab2, tab3, tab4 = st.tabs(["1 - Importar PDFs", "2 - Converter PDFs", "3 - Auto Importação XML", "📊 Histórico"])
 
 
 # --- TAB 1: Importar PDFs ---
