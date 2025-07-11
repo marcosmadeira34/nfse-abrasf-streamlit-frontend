@@ -41,11 +41,10 @@ DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
 
 # --- Configuração da Página ---
 st.set_page_config(
-    page_title="NFS-e Control - Sistema de Gerenciamento",
+    page_title="Sistema de Gerenciamento e conversão de NFS-e",
     page_icon="🧾",
     layout="wide"
 )
-
 
 
 

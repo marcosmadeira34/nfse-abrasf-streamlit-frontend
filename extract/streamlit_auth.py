@@ -11,17 +11,172 @@ from datetime import datetime
 # Configurações do backend Django
 DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
 
-# Inicializa o gerenciador de cookies (a senha deve ser secreta e complexa)
-# Inicializa o gerenciador de cookies
-cookies = EncryptedCookieManager(prefix="myapp_", password="uma_senha_bem_complexa_123")
-if not cookies.ready():
-    st.stop()
-
 # Configura tempo de expiração do login (em segundos)
 LOGIN_EXPIRATION_SECONDS = 1800 # 1/5 hora
 
 
+# Inicializa o gerenciador de cookies (a senha deve ser secreta e complexa)
+cookies = EncryptedCookieManager(prefix="myapp_", password="uma_senha_bem_complexa_123")
+if not cookies.ready():
+    st.stop()
 
+
+
+
+# --- CSS Customizado com Identidade Visual LoveNFSE ---
+def load_custom_css():
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+    :root {
+        --pure-white: #FFFFFF;
+        --soft-light-gray: #ECEFF4;
+        --medium-gray: #7B8A99;
+        --main-blue: #274C77;
+        --accent-blue: #A3CEF1;
+        --highlight-gold: #E6B800;
+        --patrimonium-color: #1A3375;
+        --patrimonium-green: #00FCA8;
+        --patrimonium-card: #edfcf1
+        --dark-blue: #1A3375;
+    }
+
+    body, [data-testid="stAppViewContainer"] {
+        background-color: var(--soft-light-gray) !important;
+        font-family: 'Poppins', sans-serif;
+        color: var(--medium-gray);
+    }
+
+    .main-header {
+        background-color: var(--patrimonium-color);
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 6px 16px rgba(39, 76, 119, 0.4);
+        text-align: center;
+        color: var(--pure-white);
+    }
+
+    .main-header h1 {
+        font-weight: 700;
+        font-size: 3rem;
+        margin: 0;
+    }
+
+    .main-header .subtitle {
+        font-size: 1.1rem;
+        color: var(--pure-white);
+    }
+
+    h1, h2, h3 {
+        color: var(--main-blue);
+    }
+
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 1.8rem; }
+    h3 { font-size: 1.4rem; }
+
+    .stButton button {
+    background-color: var(--patrimonium-color);
+    color: var(--pure-white);
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    box-shadow: 0 3px 8px rgba(39, 76, 119, 0.6);
+    transition: all 0.3s ease;
+}
+
+    .stButton button:hover {
+        background-color: var(--patrimonium-green);
+        color: var(--dark-blue);
+        transform: translateY(-2px);
+    }
+
+    .stButton button:active,
+    .stButton button:focus {
+        background-color: var(--patrimonium-green);
+        color: var(--pure-white);
+    }
+                
+
+    .stTabs [data-baseweb="tab-list"] {
+    background-color: var(--soft-light-gray);
+    border-radius: 10px;
+    padding: 0.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        background-color: var(--accent-blue);
+        border-radius: 8px;
+        font-weight: 600;
+        color: var(--main-blue);
+        padding: 0.75rem 2rem;  /* Aqui está o segredo: padding lateral maior */
+        min-width: 150px;  /* Opcional: garante que o botão não fique estreito demais */
+        text-align: center;  /* Centraliza o texto, opcional */
+    }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: var(--main-blue);
+        color: var(--pure-white);
+    }
+
+    .stTabs [aria-selected="true"] {
+        background-color: var(--main-blue);
+        color: var(--patrimonium-green);
+    }
+
+    .metric-card {
+        background-color: var(--patrimonium-card);
+        border-left: 4px solid var(--main-blue);
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(44, 62, 80, 0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 3rem;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(163, 206, 241, 0.3);
+    }
+
+    .css-1d391kg {
+        background-color: var(--soft-light-gray);
+    }
+
+    .stFileUploader > div > div {
+        background-color: var(--pure-white);
+        border: 2px dashed var(--main-blue);
+        border-radius: 15px;
+        padding: 2rem;
+    }
+
+    .stProgress .st-bo {
+        background-color: var(--main-blue);
+    }
+
+    .streamlit-expanderHeader {
+        background-color: var(--soft-light-gray);
+        border-radius: 10px;
+        font-weight: 600;
+        color: var(--main-blue);
+    }
+
+    @media (max-width: 768px) {
+        .main-header h1 { font-size: 2rem; }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+load_custom_css()
+
+
+# Classe de gerenciamento de autenticação
 class StreamlitAuthManager:
     """Gerenciador de autenticação para Streamlit"""
 
@@ -196,7 +351,7 @@ def show_login_page():
         font-size: 2.5rem;
         color: #1D3557;
         margin: 0;
-        background: linear-gradient(45deg, #1D3557, #E63946);
+        background: var(--patrimonium-color);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -287,8 +442,8 @@ def show_login_page():
     
     # Container principal de login
     st.markdown("""
-    <div class="">
-        <h1 class="login-title">LoveNFSE</h1>
+    <div class="" style="margin-top: -100px;">
+        <h1 class="login-title">Conversor NFSE em XML Abrasf 1.0</h1>
     </div>
     """, unsafe_allow_html=True)
     
@@ -297,7 +452,13 @@ def show_login_page():
     
     with col2:
         with st.form("login_form", clear_on_submit=False):
-            st.markdown("### Acessao ao Sistema")
+            st.markdown("""
+                    <div class="fade-in" style="opacity: 1 !important; filter: none !important;">
+                        <h2 style="font-weight: 700; color: var(--main-blue);">
+                            <span class="icon">🔑</span> <strong>Autenticação de usuários</strong>
+                        </h2>
+                    </div>
+                    """, unsafe_allow_html=True)
             
             username = st.text_input(
                 "👤 Usuário:",
@@ -352,7 +513,7 @@ def show_login_page():
         <div style="font-size: 1.5rem; margin-bottom: 0.5rem;"></div>
         <div>Transformando processos em experiências incríveis</div>
         <div style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.7;">
-            © 2025 NFS-e LOVE • Feito com amor e tecnologia
+            © 2025 3MX Consultoria de T.I • Feito com amor e tecnologia
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -424,6 +585,7 @@ def load_auth_from_cookies():
         st.session_state.user_info = json.loads(user_info_str)
     except json.JSONDecodeError:
         st.session_state.user_info = None
+
 
 def clear_authentication():
     """Limpa a autenticação da sessão"""
