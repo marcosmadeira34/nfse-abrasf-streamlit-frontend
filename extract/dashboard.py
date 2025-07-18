@@ -362,16 +362,6 @@ XML_DIR.mkdir(parents=True, exist_ok=True)
 
 
 
-# --- Função para Exibir Mensagens de Depuração ---
-def show_debug_message(message: str):
-    """
-    Exibe uma mensagem de depuração na sidebar.
-    :param message: A mensagem a ser exibida.
-    """
-    st.sidebar.markdown(f"<div style='color: gray;'>{message}</div>", unsafe_allow_html=True)
-
-
-
 # --- Função Genérica de Comunicação com o Backend Django ---
 def call_django_backend(endpoint: str, method: str = "POST", 
                         files_data: dict = None, 
@@ -896,7 +886,7 @@ with tab1:
         )
 
         
-        MAX_FILES = 15000
+        MAX_FILES = 150
 
         if uploaded_files:
             if len(uploaded_files) > MAX_FILES:

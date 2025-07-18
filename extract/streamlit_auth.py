@@ -309,7 +309,7 @@ class StreamlitAuthManager:
             st.error(f"Erro na requisição: {str(e)}")
             return None
 
-
+    
 def show_login_page():
     """
     Exibe a página de login com identidade visual
