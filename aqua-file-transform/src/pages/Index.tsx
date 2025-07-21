@@ -61,7 +61,7 @@ const Index = () => {
                   <Zap className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-primary">Savefy</h1>
+                  <h1 className="text-xl font-bold text-primary">Patrimonium Contabilidade</h1>
                   <p className="text-sm text-muted-foreground">Automação de lançamentos NFS-e com I.A</p>
                 </div>
               </div>
