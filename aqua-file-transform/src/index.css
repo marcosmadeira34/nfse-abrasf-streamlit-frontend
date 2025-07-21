@@ -10,7 +10,7 @@
     --foreground: 219 74% 16%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: .2 47.4% 11.2%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 219 74% 16%;
@@ -82,7 +82,7 @@
   }
 }
 .metrics-card-dark {
-  --card-foreground: 164 100% 53%;
+  --card-foreground: 222 100% 53%;
 }
   .dark {
   --background: 222.2 84% 4.9%;

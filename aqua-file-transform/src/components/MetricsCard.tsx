@@ -57,7 +57,7 @@ const MetricsCard = ({
                   <TrendingDown className="w-4 h-4 text-destructive" />
                 ) : null}
                 <span className={cn(
-                  "text-xs font-medium",
+                  "text-muted-foreground",
                   trend === "up" ? "text-secondary" : 
                   trend === "down" ? "text-destructive" : 
                   "text-muted-foreground"
