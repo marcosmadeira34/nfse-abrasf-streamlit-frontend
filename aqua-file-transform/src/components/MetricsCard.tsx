@@ -1,7 +1,7 @@
 // MetricsCard.tsx
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { cn } from "@/lib/utils.tsx";
+import { cn } from "@/lib/utils.ts";
 
 interface MetricsCardProps {
   className?: string;
