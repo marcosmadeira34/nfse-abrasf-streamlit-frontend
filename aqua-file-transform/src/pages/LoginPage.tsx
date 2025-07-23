@@ -1,3 +1,4 @@
+// src/pages/LoginPage.tsx
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -161,7 +162,7 @@ export function LoginPage() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
           <p className="text-xs text-gray-500 text-center mt-4">
-            Licenciado para Patrimonium Contabilidade
+            Licenciado para @
           </p>
 
         </form>

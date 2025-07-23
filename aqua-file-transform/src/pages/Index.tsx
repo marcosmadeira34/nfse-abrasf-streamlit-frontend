@@ -5,7 +5,9 @@ import MetricsCard from "@/components/MetricsCard";
 import FileUpload from "@/components/FileUpload";
 import ConversionInterface from "@/components/ConversionInterface";
 import { useTheme } from "@/hooks/useTheme";
-
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import { 
   FileText, 
@@ -20,12 +22,14 @@ import {
 
 
 
+
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [conversionComplete, setConversionComplete] = useState(false);
   const [conversionZipUrl, setConversionZipUrl] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   
   const [metrics, setMetrics] = useState({
     pdfsLoaded: 1247,
@@ -34,7 +38,12 @@ const Index = () => {
     timeSaved: 42.5
   });
 
+  const handleLogout = () => {
+    navigate("/logout");
+  };
+
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [user, setUser] = useState(null);
 
   // Simulate real-time metrics updates
   useEffect(() => {
@@ -49,6 +58,24 @@ const Index = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // useEffect(() => {
+  //   const token = localStorage.getItem("access_token");
+  //   const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
+  //   // console.log("Backend URL:", backendUrl);
+  //   if (token) {
+  //     axios.get(`${backendUrl}/user-profile/`, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     })
+  //     .then((res) => {
+  //       setUser(res.data);
+  //       // console.log("Usuário logado:", res.data);
+  //     })
+  //     .catch((err) => console.error("Erro ao obter usuário", err));
+  //   }
+  // }, []);
 
   return (
       <div className="min-h-screen bg-background">
@@ -81,6 +108,19 @@ const Index = () => {
                   <Moon className="w-5 h-5 text-gray-800" />
                 )}
               </button>
+              {/* Botão de Logout */}
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+                aria-label="Logout"
+              >
+                <LogOut className="w-5 h-5 text-red-500" />
+              </button>
+
+              {/* // Aqui colocar o nome do usuário logado
+              <div className="text-sm text-muted-foreground">
+                Olá, <span className="font-medium text-foreground">{user?.username || "Usuário"}</span>
+              </div> */}
             </div>
           </div>
         </header>

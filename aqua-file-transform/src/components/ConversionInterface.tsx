@@ -1,5 +1,4 @@
 // start comment: ConversionInterface.tsx integrando com FileUpload
-
 import { useState, useEffect, useRef } from "react";
 import FileUpload from "./FileUpload";  // Ajuste o caminho se precisar
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +60,32 @@ const [taskId, setTaskId] = useState<string | null>(null);
   }
   }, 
   [jobs, onConversionComplete, taskId]);
+
+  // Função para baixar o arquivo zip
+  const downloadFileWithAuth = async (zipId: string) => {
+      const token = localStorage.getItem("access_token");
+      const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
+      const response = await fetch(`${backendUrl}/download-zip/${zipId}/`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao baixar o arquivo.");
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `arquivo-${zipId}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    };
 
 
   // Função para verificar o status da tarefa
@@ -132,11 +157,8 @@ const [taskId, setTaskId] = useState<string | null>(null);
       );
     }
   };
+
   // End checkTaskStatus
-
-
-
-
   const startConversion = async () => {
     if (!selectedFormat) {
       alert("Selecione um formato de saída.");
@@ -148,7 +170,6 @@ const [taskId, setTaskId] = useState<string | null>(null);
     }
 
     setIsProcessing(true);
-
     // Criar jobs para UI
     const newJobs: ConversionJob[] = selectedFiles.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
@@ -159,7 +180,6 @@ const [taskId, setTaskId] = useState<string | null>(null);
     }));
 
     setJobs(newJobs);
-
     try {
       // Chama o backend para cada arquivo (ou implemente um batch se backend suportar)
       //for (let i = 0; i < selectedFiles.length; i++) {

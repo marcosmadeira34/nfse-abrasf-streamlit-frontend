@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthProvider } from "@/context/AuthContext";
 import PrivateRoute from "@/components/PrivateRoute";
+import Logout from "@/components/LogoutPage"; 
 
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/logout" element={<Logout />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
