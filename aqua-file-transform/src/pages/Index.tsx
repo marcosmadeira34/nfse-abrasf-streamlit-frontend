@@ -8,6 +8,9 @@ import { useTheme } from "@/hooks/useTheme";
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import SupportTicket from "@/components/SupportTicket";
+import TicketManagement from "@/components/TicketManagement";
+
 
 import { 
   FileText, 
@@ -92,35 +95,40 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Automação de lançamentos NFS-e com I.A</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-secondary" />
-                <span className="text-sm text-muted-foreground">Seguro & Rápido</span>
-              </div>
-              {/* Botão de alternância de tema */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-                aria-label="Alternar tema"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="w-5 h-5 text-yellow-400" />
-                ) : (
-                  <Moon className="w-5 h-5 text-gray-800" />
-                )}
-              </button>
-              {/* Botão de Logout */}
-              <button
-                onClick={handleLogout}
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-                aria-label="Logout"
-              >
-                <LogOut className="w-5 h-5 text-red-500" />
-              </button>
+              <div className="flex items-center gap-4">
+                <SupportTicket />
+                <TicketManagement />
+                {/* Icone de ajuda */}
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-secondary" />
+                  <span className="text-sm text-muted-foreground">Seguro & Rápido</span>
+                </div>
+                {/* Botão de alternância de tema */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  aria-label="Alternar tema"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="w-5 h-5 text-yellow-400" />
+                  ) : (
+                    <Moon className="w-5 h-5 text-gray-800" />
+                  )}
+                </button>
+                {/* Botão de Logout */}
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  aria-label="Logout"
+                >
+                  <LogOut className="w-5 h-5 text-red-500" />
+                </button>
 
-              {/* // Aqui colocar o nome do usuário logado
-              <div className="text-sm text-muted-foreground">
-                Olá, <span className="font-medium text-foreground">{user?.username || "Usuário"}</span>
-              </div> */}
+                {/* // Aqui colocar o nome do usuário logado
+                <div className="text-sm text-muted-foreground">
+                  Olá, <span className="font-medium text-foreground">{user?.username || "Usuário"}</span>
+                </div> */}
+              </div>
             </div>
           </div>
         </header>
