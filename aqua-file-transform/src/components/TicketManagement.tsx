@@ -52,6 +52,9 @@ const TicketManagement = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   
   const { tickets, updateTicketStatus } = useTickets();
+  
+  // Contar tickets não lidos/abertos para notificação
+  const openTicketsCount = tickets.filter(ticket => ticket.status === 'aberto').length;
   const { toast } = useToast();
 
   const getStatusIcon = (status: Ticket['status']) => {
@@ -153,9 +156,14 @@ const TicketManagement = () => {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="flex items-center gap-2 relative">
             <TicketIcon className="w-4 h-4" />
             Meus Tickets
+            {openTicketsCount > 0 && (
+              <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {openTicketsCount}
+              </Badge>
+            )}
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">

@@ -94,15 +94,16 @@ const Index = () => {
                   <h1 className="text-xl font-bold text-primary"></h1>
                   <p className="text-sm text-muted-foreground">Automação de lançamentos NFS-e com I.A</p>
                 </div>
+                
               </div>
-              <div className="flex items-center gap-4">
-                <SupportTicket />
-                <TicketManagement />
-                {/* Icone de ajuda */}
+              {/* Icone de ajuda */}
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-secondary" />
                   <span className="text-sm text-muted-foreground">Seguro & Rápido</span>
                 </div>
+              <div className="flex items-center gap-4">
+                <SupportTicket />
+                {/* <TicketManagement />                 */}
                 {/* Botão de alternância de tema */}
                 <button
                   onClick={toggleTheme}

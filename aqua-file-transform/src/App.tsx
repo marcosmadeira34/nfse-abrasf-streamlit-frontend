@@ -18,12 +18,20 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <TooltipProvider>
+          <QueryClientProvider client={queryClient}>
+            <Routes>
+              <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/logout" element={<Logout />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+
+            {/* TOASTERS precisam estar aqui para funcionar */}
+            <Toaster />
+            <Sonner />
+          </QueryClientProvider>
+        </TooltipProvider>
       </BrowserRouter>
     </AuthProvider>
   );

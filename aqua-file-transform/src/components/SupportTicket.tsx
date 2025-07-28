@@ -1,3 +1,4 @@
+//supportticket.tsx
 import { useState } from "react";
 import {
   Dialog,
@@ -56,39 +57,38 @@ const SupportTicket = () => {
     setIsSubmitting(true);
 
     try {
-      // Criar ticket usando o hook
-      const newTicket = createTicket({
+       // ✅ Aguarde o retorno da Promise
+      const newTicket = await createTicket({
         subject,
         description,
         priority,
         attachments: attachedFiles,
       });
 
-      // Simulação de envio para backend
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
+      console.log("Ticket criado:", newTicket);
+      
       toast({
-        title: "Ticket criado com sucesso!",
-        description: `Ticket #${newTicket.id} foi criado. Acompanhe o status na área de tickets.`,
-        variant: "default",
-      });
+          title: "Ticket criado com sucesso!",
+          description: `Ticket #${newTicket.id} foi criado. Em breve você receberá uma atualização por e-mail.`,
+          variant: "default",
+        });
 
-      // Reset form
-      setSubject("");
-      setDescription("");
-      setPriority('media');
-      setAttachedFiles([]);
-      setOpen(false);
-    } catch (error) {
-      toast({
-        title: "Erro ao enviar ticket",
-        description: "Ocorreu um erro. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        // Reset form
+        setSubject("");
+        setDescription("");
+        setPriority("media");
+        setAttachedFiles([]);
+        setOpen(false);
+      } catch (error) {
+        toast({
+          title: "Erro ao enviar ticket",
+          description: "Ocorreu um erro. Tente novamente.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

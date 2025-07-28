@@ -185,6 +185,8 @@ const [taskId, setTaskId] = useState<string | null>(null);
       //for (let i = 0; i < selectedFiles.length; i++) {
         //const file = selectedFiles[i];
         const jobId = Math.random().toString(36).substr(2, 9);
+        const len = selectedFiles.length;
+        // Atualiza o job com status de processamento
 
         setJobs([
               {
@@ -192,7 +194,7 @@ const [taskId, setTaskId] = useState<string | null>(null);
                 fileName: `Lote de ${selectedFiles.length} arquivos`,
                 outputFormat: selectedFormat,
                 status: "processing",
-                progress: 0,
+                progress: len * 10, // Progresso inicial
               },
             ]);
 

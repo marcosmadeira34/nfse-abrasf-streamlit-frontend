@@ -1,3 +1,4 @@
+// use-tickets.ts
 import { useState, useCallback } from 'react';
 
 export interface Ticket {
@@ -53,17 +54,58 @@ export const useTickets = () => {
     }
   ]);
 
-  const createTicket = useCallback((ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => {
-    const newTicket: Ticket = {
-      ...ticketData,
-      id: Date.now().toString(),
-      status: 'aberto',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setTickets(prev => [newTicket, ...prev]);
-    return newTicket;
-  }, []);
+      const createTicket = useCallback(
+      async (ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'attachments'> & { attachments?: File[] }) => {
+        const formData = new FormData();
+        formData.append('subject', ticketData.subject);
+        formData.append('description', ticketData.description);
+        formData.append('priority', ticketData.priority);
+
+        if (ticketData.attachments) {
+          ticketData.attachments.forEach(file => formData.append('attachments', file));
+        }
+
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+        if (!backendUrl) throw new Error('VITE_BACKEND_URL não definido');
+
+        const token = localStorage.getItem('access_token');
+
+        const response = await fetch(`${backendUrl}/support-ticket/`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response data:', response);
+
+        const text = await response.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch {
+          throw new Error(`Resposta inválida do backend: ${text}`);
+        }
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Erro desconhecido');
+        }
+
+        return result.ticket || {
+          id: Date.now().toString(),
+          subject: ticketData.subject,
+          description: ticketData.description,
+          priority: ticketData.priority,
+          status: 'aberto',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+      },
+      []
+    );
 
   const updateTicketStatus = useCallback((ticketId: string, status: Ticket['status']) => {
     setTickets(prev => prev.map(ticket => 
