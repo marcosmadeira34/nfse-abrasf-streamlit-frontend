@@ -65,8 +65,8 @@ export const useTickets = () => {
           ticketData.attachments.forEach(file => formData.append('attachments', file));
         }
 
-        const backendUrl = import.meta.env.VITE_BACKEND_URL;
-        if (!backendUrl) throw new Error('VITE_BACKEND_URL não definido');
+        const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
+        if (!backendUrl) throw new Error('VITE_DJANGO_BACKEND_URL não definido');
 
         const token = localStorage.getItem('access_token');
 
