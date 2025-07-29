@@ -9,6 +9,6 @@ google-cloud-documentai==3.2.0
 googleapis-common-protos==1.68.0
 lxml==5.3.1
 qrcode
-# streamlit-extras
+streamlit-extras
 # streamlit-cookies-manager==0.2.0
 
