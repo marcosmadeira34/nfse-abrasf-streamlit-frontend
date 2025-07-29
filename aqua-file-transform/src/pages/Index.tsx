@@ -42,7 +42,7 @@ const Index = () => {
   });
 
   const handleLogout = () => {
-    navigate("/logout");
+    navigate("/");
   };
 
   const [taskId, setTaskId] = useState<string | null>(null);

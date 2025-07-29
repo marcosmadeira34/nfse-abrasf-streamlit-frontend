@@ -10,6 +10,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { AuthProvider } from "@/context/AuthContext";
 import PrivateRoute from "@/components/PrivateRoute";
 import Logout from "@/components/LogoutPage"; 
+import Home from "@/pages/Homepage";
 
 
 const queryClient = new QueryClient();
@@ -21,7 +22,8 @@ export default function App() {
         <TooltipProvider>
           <QueryClientProvider client={queryClient}>
             <Routes>
-              <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
+              <Route path="/" element={<Home />} />
+              <Route path="/app" element={<PrivateRoute><Index /></PrivateRoute>} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/logout" element={<Logout />} />
               <Route path="*" element={<NotFound />} />

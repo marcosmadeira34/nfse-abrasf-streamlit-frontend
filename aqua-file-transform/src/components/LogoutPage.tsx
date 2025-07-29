@@ -1,26 +1,36 @@
 // src/components/LogoutPage.tsx
-
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const Logout = () => {
+  const [confirmed, setConfirmed] = useState(false);
+
   useEffect(() => {
-    // 1. Remover token armazenado
-    localStorage.removeItem("access_token");
-    sessionStorage.clear(); // remove qualquer outra coisa relacionada
+    if (!confirmed) {
+      const shouldLogout = window.confirm("Você tem certeza que deseja sair?");
+      if (shouldLogout) {
+        setConfirmed(true);
+      } else {
+        // Redireciona de volta para o app ou página anterior
+        window.history.back(); // ou window.location.href = "/app";
+      }
+    } else {
+      // Logout confirmado, execute a limpeza
+      localStorage.removeItem("access_token");
+      sessionStorage.clear();
 
-    // 2. Remover cookies (simples)
-    document.cookie.split(";").forEach((c) => {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
 
-    // 3. Redirecionar para a página de login
-    const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
-    window.location.href = `${frontendUrl}/login`;
-  }, []);
+      // Redirecionar para a home
+      const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
+      window.location.href = `${frontendUrl}/`;
+    }
+  }, [confirmed]);
 
-  return <p>Saindo... Redirecionando para login.</p>;
+  return <p>{confirmed ? "Saindo... Redirecionando." : "Aguardando confirmação..."}</p>;
 };
 
 export default Logout;

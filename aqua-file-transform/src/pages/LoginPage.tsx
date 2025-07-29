@@ -57,12 +57,12 @@ export function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  useEffect(() => {
-      const token = localStorage.getItem("access_token");
-      if (token) {
-        navigate("/", { replace: true }); // 🔁 evita voltar para login via botão "voltar"
-      }
-    }, []);
+  // useEffect(() => {
+  //     const token = localStorage.getItem("access_token");
+  //     if (token) {
+  //       navigate("/login", { replace: true }); // 🔁 evita voltar para login via botão "voltar"
+  //     }
+  //   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +87,7 @@ export function LoginPage() {
       const token = data.tokens.access_token;
 
       login(token);
-      navigate("/", { replace: true });
+      navigate("/app", { replace: true });
             
       // Toast de sucesso moderno
       const toast = document.createElement('div');
@@ -107,7 +107,7 @@ export function LoginPage() {
         toast.style.transform = 'translateX(100%)';
         setTimeout(() => document.body.removeChild(toast), 300);
       }, 3000);
-      window.location.href = "/";
+      // window.location.href = "/";
     } catch {
       setErro("Erro ao conectar com o servidor");
     } finally {
