@@ -34,7 +34,6 @@ venv.bak/
 # Python egg files
 *.egg
 *.egg-info/
-dist/
 build/
 eggs/
 parts/
