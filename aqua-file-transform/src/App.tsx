@@ -11,6 +11,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import PrivateRoute from "@/components/PrivateRoute";
 import Logout from "@/components/LogoutPage"; 
 import Home from "@/pages/Homepage";
+import { HashRouter } from "react-router-dom";
 
 
 const queryClient = new QueryClient();
@@ -18,7 +19,7 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <TooltipProvider>
           <QueryClientProvider client={queryClient}>
             <Routes>
@@ -34,7 +35,7 @@ export default function App() {
             <Sonner />
           </QueryClientProvider>
         </TooltipProvider>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   );
 }
