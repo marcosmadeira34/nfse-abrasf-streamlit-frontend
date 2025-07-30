@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { callDjangoBackend } from "@/lib/api";
+import { toast } from "sonner";
+
 
 import { 
   Settings, 
@@ -14,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ZAxis } from "recharts";
 
 interface ConversionJob {
   id: string;
@@ -45,6 +48,9 @@ const [taskId, setTaskId] = useState<string | null>(null);
 
   const outputFormats = [
     { value: "xml", label: "XML ABRASF 1.0 (.xml)" },
+    { value: "json", label: "Formato JSON" },
+    { value: "excel", label: "Formato Excel (.xlsx)" },
+
   ];
 
   // Recebe os arquivos reais do FileUpload
@@ -88,138 +94,79 @@ const [taskId, setTaskId] = useState<string | null>(null);
     };
 
 
-  // Função para verificar o status da tarefa
-  const checkTaskStatus = async (taskId: string, jobId: string) => {
-  try {
-    const token = localStorage.getItem("access_token"); // ou de onde estiver guardando o JWT
-    const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
-    console.log("Verificando status da tarefa:", taskId, "com token:", token);
-    const response = await fetch(`${backendUrl}/task-status/${taskId}/`, {
-      
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      }
-    });
+    // Função para verificar o status da tarefa
+    const checkTaskStatus = async (taskId: string, jobId: string) => {
+    try {
+      const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
+      const token = localStorage.getItem("access_token");
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      const response = await fetch(`${backendUrl}/task-status/${taskId}/`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
 
-    const data = await response.json();  
+      const data = await response.json();
+      const audio = new Audio("sounds/notificacao.mp3");
+      audio.play();
 
-    console.log("Status da tarefa:", data);
-    console.log("Url completa chamada>", `${backendUrl}/task-status/${taskId}/`);
-    
-    if (data.state === "SUCCESS") {
-      const zipUrl = data.meta?.zip_id ? `${backendUrl}/download-zip/${data.meta.zip_id}/` : undefined;
-
-      if (zipUrl && !zipUrlRef.current) {
-        zipUrlRef.current = zipUrl;
-        setTaskId(data.meta.zip_id);
-      }
-
-      setJobs(prev =>
-        prev.map(j =>
-          j.id === jobId
-            ? {
-                ...j,
-                status: "completed",
-                progress: 100,
-                downloadUrl: zipUrl,
-              }
-            : j
-        )
-      );
+      if (data.state === "SUCCESS") {
+        const zipUrl = data.meta?.zip_id ? `${backendUrl}/download-zip/${data.meta.zip_id}/` : null;
+        if (zipUrl) {
+          toast(`Processamento ${taskId} concluído!`, {
+          description: "Clique no botão Donwload.",
+          duration: Infinity, // <- permanece até o usuário interagir
+          action: {
+            label: "Download",
+            onClick: () => {
+              window.open(zipUrl, "_blank");
+              // toast.dismiss(); // opcional: fecha o toast após clique
+              
+            },
+          },
+        });
+        }
       } else if (data.state === "FAILURE") {
-        setJobs(prev =>
-          prev.map(j => (j.id === jobId ? { ...j, status: "error", progress: 100 } : j))
-        );
+        toast.error("Erro ao processar seus arquivos.");
       } else {
-        // Enquanto estiver executando, você pode simular progresso crescente visual
-        setJobs(prev =>
-          prev.map(j =>
-            j.id === jobId
-              ? {
-                  ...j,
-                  progress: Math.min(j.progress + 5, 95),
-                }
-              : j
-          )
-        );
-
-        setTimeout(() => checkTaskStatus(taskId, jobId), 2000); // Recheca em 2s
+        setTimeout(() => checkTaskStatus(taskId, jobId), 3000); // Continua checando
       }
     } catch (err) {
-      console.error("Erro ao consultar status da tarefa:", err);
-      console.log('URL chamada:', `/task-status/${taskId}/`);
-      setJobs(prev =>
-        prev.map(j => (j.id === jobId ? { ...j, status: "error", progress: 100 } : j))
-      );
+      console.error("Erro ao verificar status:", err);
+      toast.error("Erro ao consultar status da tarefa.");
     }
   };
 
-  // End checkTaskStatus
-  const startConversion = async () => {
+    // End checkTaskStatus
+    const startConversion = async () => {
     if (!selectedFormat) {
       alert("Selecione um formato de saída.");
       return;
     }
     if (selectedFiles.length === 0) {
-      alert("Nenhum arquivo selecionado para conversão.");
+      alert("Nenhum arquivo selecionado.");
       return;
     }
 
-    setIsProcessing(true);
-    // Criar jobs para UI
-    const newJobs: ConversionJob[] = selectedFiles.map((file) => ({
-      id: Math.random().toString(36).substr(2, 9),
-      fileName: file.name,
-      outputFormat: selectedFormat,
-      status: "pending",
-      progress: 0,
-    }));
-
-    setJobs(newJobs);
     try {
-      // Chama o backend para cada arquivo (ou implemente um batch se backend suportar)
-      //for (let i = 0; i < selectedFiles.length; i++) {
-        //const file = selectedFiles[i];
-        const jobId = Math.random().toString(36).substr(2, 9);
-        const len = selectedFiles.length;
-        // Atualiza o job com status de processamento
+      toast.info(`Processamento iniciado. Você será notificado quando estiver pronto. Enquanto isso, você pode solicitar novos processamentos.`, {});
 
-        setJobs([
-              {
-                id: jobId,
-                fileName: `Lote de ${selectedFiles.length} arquivos`,
-                outputFormat: selectedFormat,
-                status: "processing",
-                progress: len * 10, // Progresso inicial
-              },
-            ]);
+      const response = await callDjangoBackend("/upload-e-processar-pdf/", "POST", { output_format: selectedFormat }, selectedFiles);
 
-        // Faz o upload do arquivo para o backend
-        // Envia todos os arquivos juntos
-        const response = await callDjangoBackend("/upload-e-processar-pdf/", "POST", { output_format: selectedFormat }, selectedFiles);
-        // Aqui você pode usar o response para atualizar o job, por exemplo, com a URL para download
-        console.log("Resposta do backend:", response);
+      const taskId = response?.task_id;
+      const jobId = Math.random().toString(36).substr(2, 9); // Só para gerenciar internamente
 
-        const taskId = response?.task_id;
-        if (taskId) {
-          checkTaskStatus(taskId, jobId);  // ← Agora verifica o status de verdade
-        } else {
-          // Se não veio task_id, marca como erro
-          setJobs([{ ...jobs[0], status: "error", progress: 100 }]);
-        }
+      if (taskId) {
+        // Checa em background
+        checkTaskStatus(taskId, jobId);
+      } else {
+        toast.error("Erro ao iniciar o processamento.");
+      }
 
     } catch (error) {
       console.error("Erro na conversão:", error);
-      // Marcar todos jobs como erro (ou o job que falhou)
-      setJobs(prev => prev.map(j => ({ ...j, status: "error" })));
-      alert(`Erro ao processar arquivos: ${error}`);
+      toast.error("Erro ao processar arquivos.");
     }
-
-    setIsProcessing(false);
   };
 
   return (
@@ -267,7 +214,7 @@ const [taskId, setTaskId] = useState<string | null>(null);
             ) : (
               <>
                 <Play className="w-4 h-4 mr-2" />
-                Iniciar Conversão
+                Processar Arquivo(s)
               </>
             )}
           </Button>
