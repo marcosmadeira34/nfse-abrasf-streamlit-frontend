@@ -11,7 +11,6 @@ import axios from "axios";
 import SupportTicket from "@/components/SupportTicket";
 import TicketManagement from "@/components/TicketManagement";
 
-
 import { 
   FileText, 
   CheckCircle, 
@@ -22,7 +21,6 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
-
 
 
 
@@ -87,20 +85,20 @@ const Index = () => {
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg gradient-primary">
-                  <Zap className="w-6 h-6 text-primary-foreground" />
-                </div>
+                {/* <div className="p-2 rounded-lg gradient-primary"> */}
+                  {/* <Zap className="w-6 h-6 text-primary-foreground" /> */}
+                {/* </div> */}
                 <div>
                   <h1 className="text-xl font-bold text-primary"></h1>
-                  <p className="text-sm text-muted-foreground">Automação de lançamentos NFS-e com I.A</p>
+                  {/* <p className="text-sm text-muted-foreground">Automação de lançamentos NFS-e com I.A</p> */}
                 </div>
                 
               </div>
               {/* Icone de ajuda */}
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-secondary" />
                   <span className="text-sm text-muted-foreground">Seguro & Rápido</span>
-                </div>
+                </div> */}
               <div className="flex items-center gap-4">
                 <SupportTicket />
                 {/* <TicketManagement />                 */}
@@ -150,7 +148,7 @@ const Index = () => {
         </section> */}
 
         {/* Metrics Dashboard */}
-        <section className="mb-12">
+        {/* <section className="mb-12">
           <h3 className="text-2xl font-semibold text-foreground mb-6 animate-fade-in">
             Métricas de Performance
           </h3>
@@ -196,7 +194,7 @@ const Index = () => {
               delay={300}
             />
           </div>
-        </section>
+        </section> */}
 
         {/* Step 1: Upload */}
         {currentStep === 1 && (

@@ -10,7 +10,17 @@ import { LoginPage } from "./pages/LoginPage";
 import { AuthProvider } from "@/context/AuthContext";
 import PrivateRoute from "@/components/PrivateRoute";
 import Logout from "@/components/LogoutPage"; 
+import Conversions from "./pages/Conversions";
+import Tickets from "./pages/Tickets";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Help from "./pages/Help";
 import Home from "@/pages/Homepage";
+import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { AppSidebar } from "./components/AppSidebar";
+import MainLayout from "./components/MainLayout";
+
 
 
 const queryClient = new QueryClient();
@@ -22,13 +32,70 @@ export default function App() {
         <TooltipProvider>
           <QueryClientProvider client={queryClient}>
             <Routes>
-              <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
+              {/* Rotas SEM layout */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/logout" element={<Logout />} />
+
+              {/* Rotas COM layout */}
+              <Route
+                path="/"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><Index /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/conversions"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><Conversions /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/tickets"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><Tickets /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><Analytics /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><Settings /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><Profile /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/help"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><Help /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
 
-            {/* TOASTERS precisam estar aqui para funcionar */}
             <Toaster />
             <Sonner />
           </QueryClientProvider>
