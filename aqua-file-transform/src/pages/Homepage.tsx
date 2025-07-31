@@ -498,13 +498,13 @@ const Homepage = () => {
         <div className="container mx-auto px-6 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <h4 className="font-semibold text-lg">PDF Patrimonium</h4>
+              {/* <h4 className="font-semibold text-lg">PDF Patrimonium</h4> */}
               <p className="text-muted-foreground text-sm">
-                A plataforma mais avançada para conversão de documentos do Brasil.
+                A plataforma mais avançada para automação de NFS-e no seu sistema fiscal Domínio do Brasil.
               </p>
               <div className="flex items-center gap-4">
-                <SupportTicket />
-                <TicketManagement />
+                {/* <SupportTicket />
+                <TicketManagement /> */}
               </div>
             </div>
             
