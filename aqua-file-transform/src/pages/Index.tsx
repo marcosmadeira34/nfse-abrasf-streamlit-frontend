@@ -288,7 +288,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-8">
           <div className="text-center">
             <p className="text-muted-foreground">
-              © 2024 PDF Converter Pro. Transformando documentos com inteligência.
+              © 2025 - Transformando o complexo em simples com inteligência.
             </p>
           </div>
         </div>

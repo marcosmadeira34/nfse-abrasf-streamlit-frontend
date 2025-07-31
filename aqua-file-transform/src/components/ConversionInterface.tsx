@@ -45,6 +45,7 @@ const [taskId, setTaskId] = useState<string | null>(null);
   const [jobs, setJobs] = useState<ConversionJob[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const zipUrlRef = useRef<string | null>(null);
+  const [buttonText, setButtonText] = useState("Processar Arquivo(s)");
 
   const outputFormats = [
     { value: "xml", label: "XML ABRASF 1.0 (.xml)" },
@@ -107,8 +108,8 @@ const [taskId, setTaskId] = useState<string | null>(null);
       });
 
       const data = await response.json();
-      const audio = new Audio("sounds/notificacao.mp3");
-      audio.play();
+      // const audio = new Audio("sounds/notificacao.mp3");
+      // audio.play();
 
       if (data.state === "SUCCESS") {
         const zipUrl = data.meta?.zip_id ? `${backendUrl}/download-zip/${data.meta.zip_id}/` : null;
@@ -155,6 +156,8 @@ const [taskId, setTaskId] = useState<string | null>(null);
 
       const taskId = response?.task_id;
       const jobId = Math.random().toString(36).substr(2, 9); // Só para gerenciar internamente
+      setButtonText("Solicitação enviado para IA ");
+      
 
       if (taskId) {
         // Checa em background
@@ -214,7 +217,7 @@ const [taskId, setTaskId] = useState<string | null>(null);
             ) : (
               <>
                 <Play className="w-4 h-4 mr-2" />
-                Processar Arquivo(s)
+                {buttonText}
               </>
             )}
           </Button>
