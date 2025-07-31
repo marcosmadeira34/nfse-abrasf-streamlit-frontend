@@ -58,7 +58,7 @@ const Homepage = () => {
           <div className="text-center max-w-4xl mx-auto">
             <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm font-medium">
               <Sparkles className="w-4 h-4 mr-2" />
-              Tecnologia de Ponta em Conversão de Documentos
+              Alta Produtividade para sua Equipe Fiscal
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent leading-tight">
               Dê fim à digitação de NFS-e no seu sistema fiscal Domínio!
