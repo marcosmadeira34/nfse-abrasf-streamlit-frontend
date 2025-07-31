@@ -32,10 +32,10 @@ import { useTickets } from "@/hooks/use-tickets"
 
 const mainNavItems = [
   { 
-    title: "Dashboard", 
+    title: "Início", 
     url: "/", 
     icon: Home,
-    description: "Visão geral do sistema"
+    description: "Faça upload de arquivos PDF",
   },
   { 
     title: "Conversões PDF", 

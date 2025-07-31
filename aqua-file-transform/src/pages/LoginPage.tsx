@@ -87,7 +87,7 @@ export function LoginPage() {
       const token = data.tokens.access_token;
 
       login(token);
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
             
       // Toast de sucesso moderno
       const toast = document.createElement('div');

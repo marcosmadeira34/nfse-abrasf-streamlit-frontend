@@ -16,10 +16,11 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Help from "./pages/Help";
-import Home from "@/pages/Homepage";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
-import { AppSidebar } from "./components/AppSidebar";
 import MainLayout from "./components/MainLayout";
+import { Button } from "@/components/ui/button";
+import Auth from "./pages/Auth";
+import Homepage from "@/pages/Homepage";
+
 
 
 
@@ -39,6 +40,20 @@ export default function App() {
               {/* Rotas COM layout */}
               <Route
                 path="/"
+                element={
+                 <Homepage />
+                }
+              />
+              <Route
+                path="/auth/login"
+                element={
+                  
+                   <Auth />
+                  
+                }
+              />
+              <Route
+                path="/dashboard"
                 element={
                   <PrivateRoute>
                     <MainLayout><Index /></MainLayout>

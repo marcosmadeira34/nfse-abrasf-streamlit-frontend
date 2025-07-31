@@ -131,70 +131,10 @@ const Index = () => {
             </div>
           </div>
         </header>
+        
 
       <main className="container mx-auto px-6 py-8">
-        {/* Hero Section */}
-        {/* <section className="text-center mb-12 animate-fade-in">
-          <div className="max-w-3xl mx-auto space-y-6">
-            <h2 className="text-4xl md:text-5xl font-bold gradient-hero bg-clip-text text-transparent">
-              Converta seus PDFs com
-              <span className="block">Inteligência e Velocidade</span>
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Nossa plataforma avançada transforma documentos PDF em múltiplos formatos 
-              com precisão excepcional e eficiência incomparável.
-            </p>
-          </div>
-        </section> */}
 
-        {/* Metrics Dashboard */}
-        {/* <section className="mb-12">
-          <h3 className="text-2xl font-semibold text-foreground mb-6 animate-fade-in">
-            Métricas de Performance
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricsCard
-              className="metrics-card-dark"
-              title="PDFs Carregados"
-              value={metrics.pdfsLoaded.toLocaleString()}
-              subtitle="Total de arquivos"
-              trend="up"
-              trendValue="+12% esta semana"
-              icon={<FileText className="w-6 h-6" />}
-              delay={0}
-            />
-            <MetricsCard
-            className="metrics-card-dark"
-              title="Processados"
-              value={metrics.processed.toLocaleString()}
-              subtitle="Conversões concluídas"
-              trend="up"
-              trendValue="+8% esta semana"
-              icon={<CheckCircle className="w-6 h-6" />}
-              delay={100}
-            />
-            <MetricsCard
-              className="metrics-card-dark"
-              title="Taxa de Sucesso"
-              value={`${metrics.successRate.toFixed(1)}%`}
-              subtitle="Conversões bem-sucedidas"
-              trend="up"
-              trendValue="+2.1% esta semana"
-              icon={<TrendingUp className="w-6 h-6" />}
-              delay={200}
-            />
-            <MetricsCard
-              className="metrics-card-dark"
-              title="Tempo Economizado"
-              value={`${metrics.timeSaved.toFixed(1)}h`}
-              subtitle="Horas poupadas hoje"
-              trend="up"
-              trendValue="+15% esta semana"
-              icon={<Clock className="w-6 h-6" />}
-              delay={300}
-            />
-          </div>
-        </section> */}
 
         {/* Step 1: Upload */}
         {currentStep === 1 && (
