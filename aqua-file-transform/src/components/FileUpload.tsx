@@ -32,7 +32,7 @@ const FileUpload = ({ onFileUpload }: FileUploadProps) => {
   };
 
   const simulateUpload = (fileId: string) => {
-    console.log(`[simulateUpload] Iniciando upload simulado para ID: ${fileId}`);
+    // console.log(`[simulateUpload] Iniciando upload simulado para ID: ${fileId}`);
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.random() * 30;
@@ -43,7 +43,7 @@ const FileUpload = ({ onFileUpload }: FileUploadProps) => {
             ? { ...f, status: "completed", progress: 100 }
             : f
         ));
-        console.log(`[simulateUpload] Upload concluído para ID: ${fileId}`);
+        // console.log(`[simulateUpload] Upload concluído para ID: ${fileId}`);
         clearInterval(interval);
       } else {
         setFiles(prev => prev.map(f => 
@@ -51,7 +51,7 @@ const FileUpload = ({ onFileUpload }: FileUploadProps) => {
             ? { ...f, progress }
             : f
         ));
-        console.log(`[simulateUpload] Progresso para ID: ${fileId}: ${progress.toFixed(0)}%`);
+        // console.log(`[simulateUpload] Progresso para ID: ${fileId}: ${progress.toFixed(0)}%`);
       }
     }, 200);
   };
@@ -59,11 +59,11 @@ const FileUpload = ({ onFileUpload }: FileUploadProps) => {
       // start comment: FileUpload.tsx ajustes para enviar arquivos reais
 
     const handleFileSelect = (selectedFiles: FileList | null) => {
-      console.log(`[handleFileSelect] Arquivos selecionados:`, selectedFiles);
+      // console.log(`[handleFileSelect] Arquivos selecionados:`, selectedFiles);
       if (!selectedFiles) return;
 
           const newFiles: UploadedFile[] = Array.from(selectedFiles).map(file => {
-          console.log(`[handleFileSelect] Adicionando arquivo:`, file.name, file.size);
+          // console.log(`[handleFileSelect] Adicionando arquivo:`, file.name, file.size);
           return {
             id: Math.random().toString(36).substr(2, 9),
             name: file.name,
@@ -75,14 +75,14 @@ const FileUpload = ({ onFileUpload }: FileUploadProps) => {
 
         setFiles(prev => {
           const updated = [...prev, ...newFiles];
-          console.log(`[handleFileSelect] Estado de arquivos atualizado:`, updated);
+          // console.log(`[handleFileSelect] Estado de arquivos atualizado:`, updated);
           return updated;
         });
 
         newFiles.forEach(file => simulateUpload(file.id));
 
         if (newFiles.length > 0 && onFileUpload) {
-          console.log(`[handleFileSelect] Chamando onFileUpload com os arquivos reais:`, Array.from(selectedFiles));
+          // console.log(`[handleFileSelect] Chamando onFileUpload com os arquivos reais:`, Array.from(selectedFiles));
           onFileUpload(Array.from(selectedFiles));
         }
       };
