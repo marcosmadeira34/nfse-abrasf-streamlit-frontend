@@ -61,12 +61,12 @@ const Homepage = () => {
               Alta Produtividade para sua Equipe Fiscal
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent leading-tight">
-              Dê fim à digitação de NFS-e no seu sistema fiscal Domínio!
+              Livre sua equipe da digitação manual de NFS no Domínio!
               <span className="block text-gradient"></span>
             </h1>
             <p className="text-xl text-muted-foreground mt-6 max-w-2xl mx-auto leading-relaxed">
               A plataforma mais avançada do Brasil em automação de NFS-e.
-              <span className="block text-gradient">Rápida, segura e com qualidade profissional garantida.</span>
+              <span className="block text-gradient">Rápida, segura, escalável e com qualidade profissional garantida.</span>
               
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
