@@ -145,17 +145,16 @@ const Index = () => {
                   <FileText className="w-8 h-8 text-primary-foreground" />
                 </div>
                 <h3 className="text-2xl font-semibold text-foreground mb-4">
-                  Faça o upload do seu PDF
+                  Gerenciar Fila de Conversão de Empresas
                 </h3>
-                <p className="text-muted-foreground mb-8">
+                {/* <p className="text-muted-foreground mb-8">
                   Selecione ou arraste seu arquivo PDF para começar a conversão
-                </p>
+                </p> */}
                 <FileUpload 
-                  onFileUpload={(fileOrFiles) => {
-                    const filesArray = Array.isArray(fileOrFiles) ? fileOrFiles : [fileOrFiles];
-                    setUploadedFile(filesArray);
-                    setCurrentStep(2);
-                  }}
+                  onQueueComplete={(queue) => {
+                      console.log('Fila de conversão criada:', queue.name);
+                    }}
+                
                 />
               </div>
             </div>

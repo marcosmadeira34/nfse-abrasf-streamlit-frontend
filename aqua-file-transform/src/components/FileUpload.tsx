@@ -1,27 +1,63 @@
-// Fileupload.tsx
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileText, X, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Upload, FileText, X, CheckCircle, Plus, FolderPlus, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { callDjangoBackend } from "@/lib/api";
+
 
 interface UploadedFile {
   id: string;
   name: string;
   size: number;
+  file: File;
   status: "uploading" | "completed" | "error";
   progress: number;
 }
 
-interface FileUploadProps {
-  onFileUpload?: (files: File[]) => void;
+interface ConversionQueue {
+  id: string;
+  name: string;
+  description: string;
+  files: UploadedFile[];
+  createdAt: Date;
+  status: "draft" | "processing" | "completed";
 }
 
-const FileUpload = ({ onFileUpload }: FileUploadProps) => {
-  const [files, setFiles] = useState<UploadedFile[]>([]);
+interface FileUploadProps {
+  onQueueComplete?: (queue: ConversionQueue) => void;
+}
+
+const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
+  const [queues, setQueues] = useState<ConversionQueue[]>([]);
+  const [selectedQueueId, setSelectedQueueId] = useState<string>("");
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newQueueName, setNewQueueName] = useState("");
+  const [newQueueDescription, setNewQueueDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileToRemove, setFileToRemove] = useState<{ queueId: string; fileId: string } | null>(null);
+  const navigate = useNavigate();
+  const [selectedFormat, setSelectedFormat] = useState<string>("");
+  // const [selectedFiles, setSelectedFiles] = useState<File[]>([]);  // agora inicia vazio
+  const [buttonText, setButtonText] = useState("Processar Arquivo(s)");
+
+  const outputFormats = [
+    { value: "xml", label: "XML ABRASF 1.0 (.xml)" },
+    { value: "json", label: "Formato JSON" },
+    { value: "excel", label: "Formato Excel (.xlsx)" },
+
+  ];
+
+
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -31,68 +67,139 @@ const FileUpload = ({ onFileUpload }: FileUploadProps) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const simulateUpload = (fileId: string) => {
-    // console.log(`[simulateUpload] Iniciando upload simulado para ID: ${fileId}`);
+  const createNewQueue = () => {
+    if (!newQueueName.trim()) return;
+
+    const newQueue: ConversionQueue = {
+      id: crypto.randomUUID(),
+      name: newQueueName,
+      description: newQueueDescription,
+      files: [],
+      createdAt: new Date(),
+      status: "draft"
+    };
+
+    setQueues(prev => [...prev, newQueue]);
+    setSelectedQueueId(newQueue.id);
+    setNewQueueName("");
+    setNewQueueDescription("");
+    setIsCreateDialogOpen(false);
+  };
+
+  const simulateUpload = (queueId: string, fileId: string) => {
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.random() * 30;
       if (progress >= 100) {
-        progress = 100;
-        setFiles(prev => prev.map(f => 
-          f.id === fileId 
-            ? { ...f, status: "completed", progress: 100 }
-            : f
-        ));
-        // console.log(`[simulateUpload] Upload concluído para ID: ${fileId}`);
-        clearInterval(interval);
+      progress = 100;
+
+      let fileName = ""; // Aqui vamos armazenar o nome do arquivo
+
+      setQueues(prev => prev.map(q => {
+        if (q.id === queueId) {
+          const updatedFiles = q.files.map(f => {
+            if (f.id === fileId) {
+              fileName = f.name; // Captura o nome do arquivo aqui
+              return { ...f, status: "completed" as const, progress: 100 };
+            }
+            return f;
+          });
+
+          return { ...q, files: updatedFiles };
+        }
+        return q;
+      }));
+
+      console.log(`Upload simulado concluído para "${fileName}" na fila ${queueId}`);
+
+      clearInterval(interval);
       } else {
-        setFiles(prev => prev.map(f => 
-          f.id === fileId 
-            ? { ...f, progress }
-            : f
+        setQueues(prev => prev.map(q => 
+          q.id === queueId 
+            ? {
+                ...q,
+                files: q.files.map(f => 
+                  f.id === fileId 
+                    ? { ...f, progress }
+                    : f
+                )
+              }
+            : q
         ));
-        // console.log(`[simulateUpload] Progresso para ID: ${fileId}: ${progress.toFixed(0)}%`);
       }
     }, 200);
   };
 
-      // start comment: FileUpload.tsx ajustes para enviar arquivos reais
+  const handleFileSelect = (selectedFiles: FileList | null) => {
+    if (!selectedFiles || !selectedQueueId) return;
 
-    const handleFileSelect = (selectedFiles: FileList | null) => {
-      // console.log(`[handleFileSelect] Arquivos selecionados:`, selectedFiles);
-      if (!selectedFiles) return;
+    const newFiles: UploadedFile[] = Array.from(selectedFiles).map(file => ({
+      id: crypto.randomUUID(),
+      name: file.name,
+      size: file.size,
+      file,
+      status: "uploading",
+      progress: 0
+    }));
 
-          const newFiles: UploadedFile[] = Array.from(selectedFiles).map(file => {
-          // console.log(`[handleFileSelect] Adicionando arquivo:`, file.name, file.size);
-          return {
-            id: Math.random().toString(36).substr(2, 9),
-            name: file.name,
-            size: file.size,
-            status: "uploading",
-            progress: 0
-          };
-        });
+    setQueues(prev => prev.map(q => 
+      q.id === selectedQueueId 
+        ? { ...q, files: [...q.files, ...newFiles] }
+        : q
+    ));
 
-        setFiles(prev => {
-          const updated = [...prev, ...newFiles];
-          // console.log(`[handleFileSelect] Estado de arquivos atualizado:`, updated);
-          return updated;
-        });
-
-        newFiles.forEach(file => simulateUpload(file.id));
-
-        if (newFiles.length > 0 && onFileUpload) {
-          // console.log(`[handleFileSelect] Chamando onFileUpload com os arquivos reais:`, Array.from(selectedFiles));
-          onFileUpload(Array.from(selectedFiles));
-        }
-      };
-
-
-    // end comment
-
-  const removeFile = (fileId: string) => {
-    setFiles(prev => prev.filter(f => f.id !== fileId));
+    newFiles.forEach(file => simulateUpload(selectedQueueId, file.id));
   };
+
+  const removeFile = (queueId: string, fileId: string) => {
+    setQueues(prev => prev.map(q => 
+      q.id === queueId 
+        ? { ...q, files: q.files.filter(f => f.id !== fileId) }
+        : q
+    ));
+  };
+
+  const startConversion = async () => {
+    const defaultFormat = "xml"; // Define XML ABRASF 1.0 como padrão
+    const selectedQueue = queues.find(q => q.id === selectedQueueId);
+    
+    if (!selectedQueue || selectedQueue.files.length === 0) {
+      alert("Nenhum arquivo na fila selecionada.");
+      return;
+    }
+
+    // Marca a fila como processando
+    setQueues(prev => prev.map(q => 
+      q.id === selectedQueueId 
+        ? { ...q, status: "processing" }
+        : q
+    ));
+  
+      try {
+        toast.info(`Processamento da fila ${selectedQueue.name} iniciado. Vocês será notificado quando estiver concluído.`, {});
+
+        const filesToSend = selectedQueue.files.map(f => f.file); // <- arquivos reais aqui!
+
+        const response = await callDjangoBackend("/upload-e-processar-pdf/", "POST", { output_format: selectedFormat || defaultFormat }, filesToSend);
+
+        const taskId = response?.task_id;
+        console.log("Task ID recebido:", taskId);
+        const jobId = Math.random().toString(36).substr(2, 9); // Só para gerenciar internamente
+        setButtonText("Solicitação enviada para IA ");
+        
+  
+        if (taskId) {
+          // Checa em background
+          checkTaskStatus(taskId, jobId);
+        } else {
+          toast.error("Erro ao iniciar o processamento.");
+        }
+  
+      } catch (error) {
+        console.error("Erro na conversão:", error);
+        toast.error("Erro ao processar arquivos.");
+      }
+    };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -110,105 +217,422 @@ const FileUpload = ({ onFileUpload }: FileUploadProps) => {
     setIsDragOver(false);
   };
 
+  const selectedQueue = queues.find(q => q.id === selectedQueueId);
+  
+
+
+  // Função para verificar o status da tarefa
+  const checkTaskStatus = async (taskId: string, jobId: string) => {
+  try {
+    const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(`${backendUrl}/task-status/${taskId}/`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+    // const audio = new Audio("sounds/notificacao.mp3");
+    // audio.play();
+
+    if (data.state === "SUCCESS") {
+      // navigate("/conversions");
+      const zipUrl = data.meta?.zip_id ? `${backendUrl}/download-zip/${data.meta.zip_id}/` : null;
+      // ✅ Atualiza o status da fila
+      setQueues(prev =>
+        prev.map(q =>
+          q.id === selectedQueueId
+            ? { ...q, status: "completed" }
+            : q
+        )
+      );
+
+      if (zipUrl) {
+        toast(`Processamento ${selectedQueue.name} concluído!`, {
+        description: "Clique em Donwload e baixe o arquivo.",
+        duration: Infinity, // <- permanece até o usuário interagir
+        action: {
+          label: "Download",
+          onClick: () => {
+            window.open(zipUrl, "_blank");
+            // toast.dismiss(); // opcional: fecha o toast após clique
+            
+          },
+        },
+      });
+      }
+    } else if (data.state === "FAILURE") {
+      toast.error("Erro ao processar seus arquivos.");
+    } else {
+      setTimeout(() => checkTaskStatus(taskId, jobId), 3000); // Continua checando
+    }
+  } catch (err) {
+    console.error("Erro ao verificar status:", err);
+    toast.error("Erro ao consultar status da tarefa.");
+  }
+};
+
+
+  
+  // Função para pegar o ID do usuário do token JWT
+  function getUserIdFromToken() {
+    const token = localStorage.getItem("access_token");
+    if (!token) return null;
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1])); // decodifica o payload do JWT
+      return payload.user_id || payload.sub || payload.email || null;
+    } catch (error) {
+      console.error("Erro ao decodificar token", error);
+      return null;
+    }
+  }
+
+  // Leitura inicial das filas salvas no localStorage (por usuário)
+  useEffect(() => {
+    const userId = getUserIdFromToken();
+    if (userId) {
+      const savedQueues = localStorage.getItem(`conversionQueues_${userId}`);
+      if (savedQueues) {
+        const parsed = JSON.parse(savedQueues);
+        parsed.forEach((q: any) => q.createdAt = new Date(q.createdAt)); // restaurar datas
+        setQueues(parsed);
+      }
+    }
+  }, []);
+
+  // Sempre que queues mudar, salvar no localStorage (por usuário)
+  useEffect(() => {
+    const userId = getUserIdFromToken();
+    if (userId) {
+      localStorage.setItem(`conversionQueues_${userId}`, JSON.stringify(queues));
+    }
+  }, [queues]);
+
+
   return (
     <Card className="gradient-card shadow-card animate-slide-up">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-primary">
-          <Upload className="w-5 h-5" />
-          Upload de Arquivos PDF
+          {/* <FolderPlus className="w-5 h-5" /> */}
+          {/* Gerenciamento de Filas de  */}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div
-          className={cn(
-            "relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300",
-            isDragOver 
-              ? "border-secondary bg-secondary/5 scale-105" 
-              : "border-border hover:border-secondary/60 hover:bg-muted/30"
-          )}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            multiple
-            className="hidden"
-            onChange={(e) => handleFileSelect(e.target.files)}
-          />
-          
-          <div className="space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center animate-float">
-              <Upload className="w-8 h-8 text-primary" />
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                Arraste arquivos PDF aqui
-              </h3>
-              <p className="text-muted-foreground">
-                ou clique para selecionar arquivos
-              </p>
-            </div>
-            
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              className="gradient-primary text-primary-foreground hover:scale-105 transition-transform"
-            >
-              Selecionar Arquivos
-            </Button>
+        {/* Queue Management */}
+        <div className="flex gap-3">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+          <Plus className="w-4 h-4" />
+          Nova Fila
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+          <DialogTitle>Criar Nova Fila de Conversão</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+          <div>
+            <Label htmlFor="queueName">Nome da Fila</Label>
+            <Input
+              id="queueName"
+              placeholder="Ex: Empresa X - Contratos"
+              value={newQueueName}
+              onChange={(e) => setNewQueueName(e.target.value)}
+            />
           </div>
+          <div>
+            <Label htmlFor="queueDescription">Descrição (opcional)</Label>
+            <Input
+              id="queueDescription"
+              placeholder="Descrição da fila..."
+              value={newQueueDescription}
+              onChange={(e) => setNewQueueDescription(e.target.value)}
+            />
+          </div>
+          <Button onClick={createNewQueue} className="w-full">
+            Criar Fila
+          </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {queues.length > 0 && (
+            <Select value={selectedQueueId} onValueChange={setSelectedQueueId}>
+              <SelectTrigger className="w-64">
+          <SelectValue placeholder="Selecionar fila..." />
+              </SelectTrigger>
+              <SelectContent>
+          {queues.map((queue) => (
+            <SelectItem key={queue.id} value={queue.id}>
+              <div className="flex items-center gap-2">
+                <span>{queue.name}</span>
+                <Badge variant={queue.status === "draft" ? "outline" : queue.status === "processing" ? "secondary" : "default"}>
+            {queue.files.length} arquivos
+                </Badge>
+              </div>
+            </SelectItem>
+          ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {selectedQueueId && (
+            <Button 
+              variant="destructive" 
+              className="flex items-center gap-2"
+              onClick={() => {
+          setQueues(prev => prev.map(q => 
+            q.id === selectedQueueId 
+              ? { ...q, files: [], status: "draft" as const }
+              : q
+          ));
+          toast.success("Fila limpa com sucesso!");
+              }}
+            >
+              <X className="w-4 h-4" />
+              Limpar Fila
+            </Button>
+          )}
+
+          {/* Excluir Fila */}
+          {selectedQueueId && (
+            <Button 
+              variant="destructive" 
+              className="flex items-center gap-2"
+              onClick={() => {
+                setQueues(prev => prev.filter(q => q.id !== selectedQueueId));
+                setSelectedQueueId("");
+                toast.success("Fila excluída com sucesso!");
+              }}
+            >
+              <X className="w-4 h-4" />
+              Excluir Fila
+            </Button>
+          )}
         </div>
 
-        {files.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="font-medium text-foreground">Arquivos Carregados</h4>
-            {files.map((file, index) => (
-              <div
-                key={file.id}
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-lg border bg-card",
-                  "animate-scale-in"
-                )}
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="p-2 rounded bg-primary/10">
-                  <FileText className="w-4 h-4 text-primary" />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="font-medium text-sm truncate text-foreground">
-                      {file.name}
-                    </p>
-                    <span className="text-xs text-muted-foreground">
-                      {formatFileSize(file.size)}
-                    </span>
-                  </div>
-                  
-                  {file.status === "uploading" && (
-                    <Progress value={file.progress} className="h-1" />
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  {file.status === "completed" && (
-                    <CheckCircle className="w-4 h-4 text-secondary" />
-                  )}
-                  
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => removeFile(file.id)}
-                    className="h-6 w-6 p-0 hover:bg-destructive/10"
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
+
+
+        {/* File Upload Area */}
+        {selectedQueueId && (
+          <div
+            className={cn(
+              "relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300",
+              isDragOver 
+                ? "border-secondary bg-secondary/5 scale-105" 
+                : "border-border hover:border-secondary/60 hover:bg-muted/30"
+            )}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileSelect(e.target.files)}
+            />
+            
+            <div className="space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center animate-float">
+                <Upload className="w-8 h-8 text-primary" />
               </div>
-            ))}
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Adicionar PDFs de NFS na fila: {selectedQueue?.name}
+                </h3>
+                <p className="text-muted-foreground">
+                  Arraste aqui ou clique para adicionar
+                </p>
+              </div>
+              
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                className="gradient-primary text-primary-foreground hover:scale-105 transition-transform"
+                disabled={selectedQueue?.status !== "draft"}
+              >
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!selectedQueueId && queues.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <FolderPlus className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Crie uma nova fila para começar a adicionar arquivos</p>
+          </div>
+        )}
+
+        {!selectedQueueId && queues.length > 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <Upload className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Selecione uma fila para adicionar arquivos</p>
+          </div>
+        )}
+
+        {/* Queue Details */}
+        {selectedQueue && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-foreground">Fila Selecionada: {selectedQueue.name}</h4>
+                {selectedQueue.description && (
+                  <p className="text-sm text-muted-foreground">{selectedQueue.description}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={
+                  selectedQueue.status === "draft" ? "outline" : 
+                  selectedQueue.status === "processing" ? "secondary" : "default"
+                }>
+                  {selectedQueue.status === "draft" ? "Rascunho" :
+                   selectedQueue.status === "processing" ? "Processando" : "Concluída"}
+                   {/* {selectedQueue.status === "completed" ? "Concluída" : ""} */}
+                </Badge>
+                {selectedQueue.files.length > 0 && selectedQueue.status === "draft" && (
+                  <Button 
+                    onClick={() => startConversion()}
+                    className="flex items-center gap-2"
+                    variant="success"
+                  >
+                    <Send className="w-4 h-4" />
+                    Iniciar Conversão
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {selectedQueue.files.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {selectedQueue.files.length} arquivo(s) na fila
+                </p>
+                {selectedQueue.files.map((file, index) => (
+                  <div
+                    key={file.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border bg-card",
+                      "animate-scale-in"
+                    )}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="p-2 rounded bg-primary/10">
+                      <FileText className="w-4 h-4 text-primary" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-medium text-sm truncate text-foreground">
+                          {file.name}
+                        </p>
+                        <span className="text-xs text-muted-foreground">
+                          {formatFileSize(file.size)}
+                        </span>
+                      </div>
+                      
+                      {file.status === "uploading" && (
+                        <Progress value={file.progress} className="h-1" />
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {file.status === "completed" && (
+                        <CheckCircle className="w-4 h-4 text-secondary" />
+                      )}
+                      
+                      {selectedQueue.status === "draft" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setFileToRemove({ queueId: selectedQueue.id, fileId: file.id })}
+                          className="h-6 w-6 p-0 hover:bg-destructive/10"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* end comment: Queue Details */}
+        <Dialog open={!!fileToRemove} onOpenChange={(open) => !open && setFileToRemove(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Remover Arquivo</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              Tem certeza que deseja remover este arquivo da fila?
+            </p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setFileToRemove(null)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (fileToRemove) {
+                    removeFile(fileToRemove.queueId, fileToRemove.fileId);
+                    setFileToRemove(null);
+                  }
+                }}
+              >
+                Remover
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Queues List */}
+        {queues.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="font-medium text-foreground">Filas Criadas</h4>
+            <div className="grid gap-3">
+              {queues
+              .filter(queue => queue.status === "draft") // Exclui filas concluídas
+              .map((queue) => (
+                <div
+                  key={queue.id}
+                  className={cn(
+                    "p-3 border rounded-lg cursor-pointer transition-all",
+                    selectedQueueId === queue.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                  )}
+                  onClick={() => setSelectedQueueId(queue.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{queue.name}</p>
+                      {queue.description && (
+                        <p className="text-xs text-muted-foreground">{queue.description}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {queue.files.length} arquivos
+                      </Badge>
+                      <Badge variant={
+                        queue.status === "draft" ? "outline" : 
+                        queue.status === "processing" ? "secondary" : "default"
+                      } className="text-xs">
+                        {queue.status === "draft" ? "Rascunho" :
+                         queue.status === "processing" ? "Processando" : "Concluída"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </CardContent>
@@ -217,3 +641,5 @@ const FileUpload = ({ onFileUpload }: FileUploadProps) => {
 };
 
 export default FileUpload;
+
+// O fluxo deve ser o seguinte. O usuario cria as filas, adiciona os arquivos em cada fila e pede para processar. Um toast informando que o Processo começou é dispara. Apos o toast voltar informando que o processo foi concluído, o status de Processando deve ser alterado para concluído  e posteriormente na página 'conversion', disponibilizar as informaçoes do processamento. Veja como esta meu arquivo Upload

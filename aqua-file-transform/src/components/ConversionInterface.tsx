@@ -156,7 +156,7 @@ const [taskId, setTaskId] = useState<string | null>(null);
 
       const taskId = response?.task_id;
       const jobId = Math.random().toString(36).substr(2, 9); // Só para gerenciar internamente
-      setButtonText("Solicitação enviado para IA ");
+      setButtonText("Solicitação enviada para IA ");
       
 
       if (taskId) {

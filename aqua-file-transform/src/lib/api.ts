@@ -9,7 +9,7 @@ export async function callDjangoBackend(
   console.log("Calling backend URL:", url);
 
   const accessToken = localStorage.getItem("access_token");
-  console.log("Access token usado:", accessToken);
+  // console.log("Access token usado:", accessToken);
 
   const headers: Record<string, string> = {};
   if (accessToken) {

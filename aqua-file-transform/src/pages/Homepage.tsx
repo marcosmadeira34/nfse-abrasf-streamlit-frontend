@@ -11,6 +11,7 @@ import TicketManagement from "@/components/TicketManagement";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ROICalculator from "@/components/ROICalculator";
 
 import { 
   FileText, 
@@ -211,10 +212,10 @@ const Homepage = () => {
                     Selecione ou arraste seu arquivo PDF para começar a conversão
                   </p>
                   <FileUpload 
-                    onFileUpload={(file) => {
-                      setUploadedFile(file);
-                      setCurrentStep(2);
+                    onQueueComplete={(queue) => {
+                      console.log('Fila de conversão criada:', queue.name);
                     }}
+                    
                   />
                 </CardContent>
               </Card>
@@ -373,6 +374,11 @@ const Homepage = () => {
               </CardContent>
             </Card>
           </div>
+        </section>
+
+        {/* ROI Calculator Section */}
+        <section className="py-20 bg-muted/30 -mx-6 px-6">
+        <ROICalculator />
         </section>
 
         {/* Metrics Dashboard */}
