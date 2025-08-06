@@ -250,7 +250,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       );
 
       if (zipUrl) {
-        toast(`Processamento ${selectedQueue.name} concluído com sucesso!`, {
+        toast(`Processamento da fila ${selectedQueue.name} concluído com sucesso!`, {
         description: "Clique em Donwload e baixe o arquivo.",
         duration: Infinity, // <- permanece até o usuário interagir
         action: {
