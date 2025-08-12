@@ -234,7 +234,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   try {
     const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${backendUrl}/task-status/${taskId}/`, {
+    const response = await fetch(`${backendUrl}/api/task-status/${taskId}/`, {
       headers: {
         "Authorization": `Bearer ${token}`,
       },
@@ -243,7 +243,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     const data = await response.json();
     
     if (data.state === "SUCCESS") {
-      const zipUrl = data.meta?.zip_id ? `${backendUrl}/download-zip/${data.meta.zip_id}/` : null;
+      const zipUrl = data.meta?.zip_id ? `${backendUrl}/api/download-zip/${data.meta.zip_id}/` : null;
       console.log("Zip URL:", zipUrl);
 
       // ✅ Atualiza o status da fila
