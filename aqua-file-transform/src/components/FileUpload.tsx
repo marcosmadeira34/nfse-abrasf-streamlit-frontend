@@ -239,11 +239,13 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         "Authorization": `Bearer ${token}`,
       },
     });
+    console.log("Verificando status da tarefa:", taskId);
     const data = await response.json();
     
     if (data.state === "SUCCESS") {
-      const zipUrl = data.meta?.zip_id ? `${backendUrl}/api/download-zip/${data.meta.zip_id}/` : null;
-      
+      const zipUrl = data.meta?.zip_id ? `${backendUrl}/download-zip/${data.meta.zip_id}/` : null;
+      console.log("Zip URL:", zipUrl);
+
       // ✅ Atualiza o status da fila
       setQueues(prev =>
         prev.map(q =>
