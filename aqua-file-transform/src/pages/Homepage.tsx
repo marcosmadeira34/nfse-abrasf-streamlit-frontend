@@ -62,17 +62,17 @@ const Homepage = () => {
               Alta Produtividade para sua Equipe Fiscal
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent leading-tight">
-              Livre sua equipe da digitação manual de NFS no Domínio!
+              Elimine a digitação manual de NFS-e no seu sistema Domínio!
               <span className="block text-gradient"></span>
             </h1>
-            <p className="text-xl text-muted-foreground mt-6 max-w-2xl mx-auto leading-relaxed">
-              A plataforma mais avançada do Brasil em automação de NFS-e.
-              <span className="block text-gradient">Rápida, segura, escalável e com qualidade profissional garantida.</span>
-              
+            <p className="text-xl text-muted-foreground mt-6 max-w-3xl mx-auto leading-relaxed">
+              A plataforma mais avançada do Brasil em automação de lançamentos de NFS-e.
+              <span className="block text-gradient">Economia real de tempo e dinheiro na seu depto fiscal usando IA.</span>
+
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
               <Button size="lg" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                Começar Grátis
+                Criar conta
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <Button 

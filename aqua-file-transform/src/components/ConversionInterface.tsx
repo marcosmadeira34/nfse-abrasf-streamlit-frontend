@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { callDjangoBackend } from "@/lib/api";
 import { toast } from "sonner";
+import selectedQueue from "@/components/FileUpload"; // Ajuste o caminho se necessário
 
 
 import { 
@@ -86,8 +87,9 @@ const [taskId, setTaskId] = useState<string | null>(null);
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
+      const queueName = selectedQueue?.name || "fila";
       a.href = downloadUrl;
-      a.download = `arquivo-${zipId}.zip`;
+      a.download = `arquivo-${queueName}.zip`;
       document.body.appendChild(a);
       a.click();
       a.remove();

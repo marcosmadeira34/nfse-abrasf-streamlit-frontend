@@ -2,6 +2,8 @@ import { useState } from "react"
 import { 
   Home, 
   FileText, 
+  CheckSquare,
+  Send,
   MessageSquare, 
   Settings, 
   User, 
@@ -38,6 +40,18 @@ const mainNavItems = [
     description: "Faça upload de arquivos PDF",
   },
   { 
+    title: "Validação XML", 
+    url: "/xml-validation", 
+    icon: CheckSquare,
+    description: "Valide arquivos XML"
+  },
+  { 
+    title: "Integração API", 
+    url: "/api-integration", 
+    icon: Send,
+    description: "Envio para APIs externas"
+  },
+   { 
     title: "Conversões PDF", 
     url: "/conversions", 
     icon: FileText,
@@ -85,7 +99,7 @@ export function AppSidebar() {
   const { tickets } = useTickets()
   const currentPath = location.pathname
   
-  const isCollapsed = state === "collapsed"
+  const isCollapsed = false
   const openTicketsCount = tickets.filter(ticket => ticket.status === 'aberto').length
 
   const isActive = (path: string) => {
@@ -169,7 +183,7 @@ export function AppSidebar() {
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <h2 className="font-bold text-lg bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Patrimonium
+                Alivya
               </h2>
               {/* <p className="text-xs text-muted-foreground">Sistema PDF Pro</p> */}
             </div>

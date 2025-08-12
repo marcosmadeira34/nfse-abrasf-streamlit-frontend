@@ -1,3 +1,4 @@
+//src/components/FileUpload.tsx
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { callDjangoBackend } from "@/lib/api";
-
+import { Loader2 } from "lucide-react";
 
 interface UploadedFile {
   id: string;
@@ -226,20 +227,16 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   try {
     const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
     const token = localStorage.getItem("access_token");
-
     const response = await fetch(`${backendUrl}/task-status/${taskId}/`, {
       headers: {
         "Authorization": `Bearer ${token}`,
       },
     });
-
     const data = await response.json();
-    // const audio = new Audio("sounds/notificacao.mp3");
-    // audio.play();
-
+    
     if (data.state === "SUCCESS") {
-      // navigate("/conversions");
       const zipUrl = data.meta?.zip_id ? `${backendUrl}/download-zip/${data.meta.zip_id}/` : null;
+      
       // ✅ Atualiza o status da fila
       setQueues(prev =>
         prev.map(q =>
@@ -248,32 +245,78 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
             : q
         )
       );
-
+      
       if (zipUrl) {
+        // Mostrar toast apenas com opção de download
         toast(`Processamento da fila ${selectedQueue.name} concluído com sucesso!`, {
-        description: "Clique em Donwload e baixe o arquivo.",
-        duration: Infinity, // <- permanece até o usuário interagir
-        action: {
-          label: "Download",
-          onClick: () => {
-            window.open(zipUrl, "_blank");
-            // toast.dismiss(); // opcional: fecha o toast após clique
-            
-          },
-        },
-      });
+          description: "Os arquivos convertidos já foram enviados para validação. Clique em Download para baixar o arquivo.",
+          duration: Infinity,
+          action: (
+            <Button
+              size="sm"
+              onClick={() => {
+                window.open(zipUrl, "_blank");
+                toast.dismiss(); // Fecha o toast após o download
+              }}
+            >
+              Download
+            </Button>
+          ),
+        });
+        
+        // Salvar os dados da conversão para persistência
+        const conversionData = {
+          taskId,
+          zipId: data.meta.zip_id,
+          queueName: selectedQueue?.name,
+          queueId: selectedQueueId,
+          xmlData: data.meta.arquivos_resultado,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Salvar no localStorage
+        localStorage.setItem(`conversionData_${selectedQueueId}`, JSON.stringify(conversionData));
+
+
+        // Crie um array de XmlData já estruturado para salvar também:
+        const userId = getUserIdFromToken();
+        console.log("UserId para salvar localStorage:", userId);
+        
+        const xmlFiles = Object.entries(data.meta.arquivos_resultado).map(([fileName, content]) => ({
+          id: crypto.randomUUID(),
+          fileName,
+          queueName: selectedQueue?.name || "Fila Desconhecida",
+          xmlContent: { content },
+          validationStatus: 'pendente',
+          anomalies: [],
+          createdAt: new Date().toISOString(),
+        }));
+
+        localStorage.setItem(`xmlFiles_${userId}_${selectedQueueId}`, JSON.stringify(xmlFiles));
+
+        // Redirecionar automaticamente para a validação com os dados
+        // navigate('/xml-validation', { 
+        //   state: { 
+        //     taskId, 
+        //     zipId: data.meta.zip_id,
+        //     queueName: selectedQueue?.name,
+        //     queueId: selectedQueueId,
+        //     xmlData: data.meta.arquivos_resultado
+        //   }
+        // });
       }
+      
+      console.log("Processamento concluído:", data);
     } else if (data.state === "FAILURE") {
       toast.error("Erro ao processar seus arquivos.");
     } else {
-      setTimeout(() => checkTaskStatus(taskId, jobId), 3000); // Continua checando
+      setTimeout(() => checkTaskStatus(taskId, jobId), 3000);
     }
   } catch (err) {
     console.error("Erro ao verificar status:", err);
     toast.error("Erro ao consultar status da tarefa.");
   }
 };
-
 
   
   // Função para pegar o ID do usuário do token JWT
@@ -290,26 +333,72 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     }
   }
 
+  const cleanOldData = () => {
+  const userId = getUserIdFromToken();
+  if (!userId) return;
+  
+  const now = new Date();
+  const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 dias
+  
+  // Limpar dados de conversão antigos
+  Object.keys(localStorage)
+    .filter(key => key.startsWith('conversionData_'))
+    .forEach(key => {
+      try {
+        const data = JSON.parse(localStorage.getItem(key) || '{}');
+        if (data.timestamp && now.getTime() - new Date(data.timestamp).getTime() > maxAge) {
+          localStorage.removeItem(key);
+          localStorage.removeItem(`xmlFiles_${userId}_${key.replace('conversionData_', '')}`);
+        }
+      } catch (error) {
+        console.error("Erro ao limpar dados antigos:", error);
+      }
+    });
+};
+
+
+
+
   // Leitura inicial das filas salvas no localStorage (por usuário)
   useEffect(() => {
-    const userId = getUserIdFromToken();
-    if (userId) {
-      const savedQueues = localStorage.getItem(`conversionQueues_${userId}`);
-      if (savedQueues) {
+  const userId = getUserIdFromToken();
+  if (userId) {
+    const savedQueues = localStorage.getItem(`conversionQueues_${userId}`);
+    if (savedQueues) {
+      try {
         const parsed = JSON.parse(savedQueues);
-        parsed.forEach((q: any) => q.createdAt = new Date(q.createdAt)); // restaurar datas
+        parsed.forEach((q: any) => {
+          // Restaurar a data corretamente
+          q.createdAt = new Date(q.createdAt);
+          // Garantir que o status seja válido
+          if (!["draft", "processing", "completed"].includes(q.status)) {
+            q.status = "draft";
+          }
+        });
         setQueues(parsed);
+        
+        // Se houver uma fila selecionada salva, restaurá-la
+        const savedSelectedQueueId = localStorage.getItem(`selectedQueueId_${userId}`);
+        if (savedSelectedQueueId && parsed.some((q: any) => q.id === savedSelectedQueueId)) {
+          setSelectedQueueId(savedSelectedQueueId);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar filas salvas:", error);
       }
     }
-  }, []);
+  }
+}, []);
 
-  // Sempre que queues mudar, salvar no localStorage (por usuário)
+
   useEffect(() => {
-    const userId = getUserIdFromToken();
-    if (userId) {
-      localStorage.setItem(`conversionQueues_${userId}`, JSON.stringify(queues));
+  const userId = getUserIdFromToken();
+  if (userId) {
+    localStorage.setItem(`conversionQueues_${userId}`, JSON.stringify(queues));
+    if (selectedQueueId) {
+      localStorage.setItem(`selectedQueueId_${userId}`, selectedQueueId);
     }
-  }, [queues]);
+  }
+}, [queues, selectedQueueId]);
 
 
   return (
@@ -489,14 +578,18 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={
-                  selectedQueue.status === "draft" ? "outline" : 
-                  selectedQueue.status === "processing" ? "secondary" : "default"
-                }>
-                  {selectedQueue.status === "draft" ? "Rascunho" :
-                   selectedQueue.status === "processing" ? "Processando" : "Concluída"}
-                   {/* {selectedQueue.status === "completed" ? "Concluída" : ""} */}
-                </Badge>
+          <Badge variant={
+            selectedQueue.status === "draft" ? "outline" : 
+            selectedQueue.status === "processing" ? "secondary" : "default"
+          }>
+            {selectedQueue.status === "draft" ? "Conversão não iniciada" :
+             selectedQueue.status === "processing" ? (
+               <div className="flex items-center gap-1">
+                 <Loader2 className="w-4 h-4 animate-spin" />
+                 Processando
+               </div>
+             ) : selectedQueue.status === "completed" ? "Concluída" : ""}
+          </Badge>
                 {selectedQueue.files.length > 0 && selectedQueue.status === "draft" && (
                   <Button 
                     onClick={() => startConversion()}
@@ -621,13 +714,13 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                       <Badge variant="outline" className="text-xs">
                         {queue.files.length} arquivos
                       </Badge>
-                      <Badge variant={
+                      {/* <Badge variant={
                         queue.status === "draft" ? "outline" : 
                         queue.status === "processing" ? "secondary" : "default"
                       } className="text-xs">
                         {queue.status === "draft" ? "Rascunho" :
                          queue.status === "processing" ? "Processando" : "Concluída"}
-                      </Badge>
+                      </Badge> */}
                     </div>
                   </div>
                 </div>

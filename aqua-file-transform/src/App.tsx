@@ -20,6 +20,8 @@ import MainLayout from "./components/MainLayout";
 import { Button } from "@/components/ui/button";
 import Auth from "./pages/Auth";
 import Homepage from "@/pages/Homepage";
+import XmlValidation from "./pages/XmlValidation";
+import ApiIntegration from "./pages/ApiIntegration";
 
 
 
@@ -57,6 +59,23 @@ export default function App() {
                 element={
                   <PrivateRoute>
                     <MainLayout><Index /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              
+              <Route
+                path="/xml-validation"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><XmlValidation /></MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/api-integration"
+                element={
+                  <PrivateRoute>
+                    <MainLayout><ApiIntegration /></MainLayout>
                   </PrivateRoute>
                 }
               />
