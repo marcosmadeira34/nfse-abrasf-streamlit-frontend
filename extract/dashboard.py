@@ -37,7 +37,7 @@ PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = os.getenv("LOCATION")
 PROCESSOR_ID = os.getenv("PROCESSOR_ID")
 
-DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
+DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://alivee.com.br")
 
 # --- Configuração da Página ---
 st.set_page_config(

@@ -22,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import JSZip from 'jszip';
 import { callDjangoBackend } from "@/lib/api";
 import { useNavigate, useLocation } from "react-router-dom";
+import { v4 as uuidv4 } from 'uuid';
+
 
 interface XmlData {
   id: string;
@@ -139,7 +141,7 @@ const XmlValidation = () => {
             
             // Transformar os dados recebidos no formato esperado
             const newXmlFiles: XmlData[] = Object.entries(xmlData).map(([fileName, content]) => ({
-              id: crypto.randomUUID(),
+              id: uuidv4(),
               fileName,
               queueName: queueName || "Fila Desconhecida",
               xmlContent: { content },

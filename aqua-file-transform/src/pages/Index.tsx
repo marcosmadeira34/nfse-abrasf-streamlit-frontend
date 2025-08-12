@@ -244,7 +244,7 @@ const Index = () => {
       )}
 
         {/* Additional Features */}
-        <section className="mt-16 text-center animate-fade-in" style={{ animationDelay: "400ms" }}>
+        {/* <section className="mt-16 text-center animate-fade-in" style={{ animationDelay: "400ms" }}>
           <div className="max-w-4xl mx-auto">
             <h3 className="text-2xl font-semibold text-foreground mb-8">
               Por que escolher nossa plataforma?
@@ -279,7 +279,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
 
       {/* Footer */}

@@ -9,7 +9,7 @@ from datetime import datetime
 
 
 # Configurações do backend Django
-DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
+DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://alivee.com.br")
 
 # Configura tempo de expiração do login (em segundos)
 LOGIN_EXPIRATION_SECONDS = 1800 # 1/5 hora

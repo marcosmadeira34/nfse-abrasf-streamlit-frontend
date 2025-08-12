@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { callDjangoBackend } from "@/lib/api";
 import { Loader2 } from "lucide-react";
+import { v4 as uuidv4} from "uuid";
 
 interface UploadedFile {
   id: string;
@@ -72,7 +73,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     if (!newQueueName.trim()) return;
 
     const newQueue: ConversionQueue = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name: newQueueName,
       description: newQueueDescription,
       files: [],
@@ -135,7 +136,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     if (!selectedFiles || !selectedQueueId) return;
 
     const newFiles: UploadedFile[] = Array.from(selectedFiles).map(file => ({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name: file.name,
       size: file.size,
       file,
@@ -181,7 +182,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
 
         const filesToSend = selectedQueue.files.map(f => f.file); // <- arquivos reais aqui!
 
-        const response = await callDjangoBackend("/upload-e-processar-pdf/", "POST", { output_format: selectedFormat || defaultFormat }, filesToSend);
+        const response = await callDjangoBackend("/api/upload-e-processar-pdf/", "POST", { output_format: selectedFormat || defaultFormat }, filesToSend);
 
         const taskId = response?.task_id;
         console.log("Task ID recebido:", taskId);
@@ -220,7 +221,13 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
 
   const selectedQueue = queues.find(q => q.id === selectedQueueId);
   
-
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
 
   // Função para verificar o status da tarefa
   const checkTaskStatus = async (taskId: string, jobId: string) => {
@@ -283,7 +290,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         console.log("UserId para salvar localStorage:", userId);
         
         const xmlFiles = Object.entries(data.meta.arquivos_resultado).map(([fileName, content]) => ({
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           fileName,
           queueName: selectedQueue?.name || "Fila Desconhecida",
           xmlContent: { content },

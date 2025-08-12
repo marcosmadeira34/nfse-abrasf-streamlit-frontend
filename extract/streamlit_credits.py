@@ -7,7 +7,7 @@ from io import BytesIO
 from PIL import Image
 import os
 
-DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://127.0.0.1:8001")
+DJANGO_BACKEND_URL = os.getenv("DJANGO_BACKEND_URL", "http://alivee.com.br")
 
 class CreditManager:
     """Gerenciador de créditos para Streamlit"""

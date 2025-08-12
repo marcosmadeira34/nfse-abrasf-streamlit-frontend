@@ -47,7 +47,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/auth/login"
+                path="/api/auth/login"
                 element={
                   
                    <Auth />
@@ -55,7 +55,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/dashboard"
+                path="/api/dashboard"
                 element={
                   <PrivateRoute>
                     <MainLayout><Index /></MainLayout>
@@ -64,7 +64,7 @@ export default function App() {
               />
               
               <Route
-                path="/xml-validation"
+                path="/api/xml-validation"
                 element={
                   <PrivateRoute>
                     <MainLayout><XmlValidation /></MainLayout>
@@ -72,7 +72,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/api-integration"
+                path="/api/api-integration"
                 element={
                   <PrivateRoute>
                     <MainLayout><ApiIntegration /></MainLayout>
@@ -80,7 +80,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/conversions"
+                path="/api/conversions"
                 element={
                   <PrivateRoute>
                     <MainLayout><Conversions /></MainLayout>
@@ -88,7 +88,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/tickets"
+                path="/api/tickets"
                 element={
                   <PrivateRoute>
                     <MainLayout><Tickets /></MainLayout>
@@ -96,7 +96,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/analytics"
+                path="/api/analytics"
                 element={
                   <PrivateRoute>
                     <MainLayout><Analytics /></MainLayout>
@@ -104,7 +104,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/settings"
+                path="/api/settings"
                 element={
                   <PrivateRoute>
                     <MainLayout><Settings /></MainLayout>
@@ -112,7 +112,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/profile"
+                path="/api/profile"
                 element={
                   <PrivateRoute>
                     <MainLayout><Profile /></MainLayout>
@@ -120,7 +120,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/help"
+                path="/api/help"
                 element={
                   <PrivateRoute>
                     <MainLayout><Help /></MainLayout>
