@@ -234,6 +234,13 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   try {
     const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
     const token = localStorage.getItem("access_token");
+    console.log("Token é:", token);
+
+    if (!token) {
+      console.error("Token não encontrado no localStorage");
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
     const url_response = `${backendUrl}/api/task-status/${taskId}/`;
     console.log("URL da requisição:", url_response);
 
@@ -342,7 +349,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       setTimeout(() => checkTaskStatus(taskId, jobId), 3000);
     }
   } catch (err) {
-    console.error("Erro ao verificar status:", err);
+    console.error("Erro ao verificar status em fila", err);
     toast.error("Erro ao consultar status da tarefa.");
   }
 };

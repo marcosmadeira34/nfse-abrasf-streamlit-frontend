@@ -48,7 +48,12 @@ const Homepage = () => {
         successRate: 95.3,
         timeSaved: 42.5
     });
+
+    useEffect(() => {
+    document.title = "Alivee - Automação de NFS-e Inteligente";
+  }, []);
     // Component implementation will go here
+    
  
     return (
     <div className="min-h-full bg-background">
@@ -57,24 +62,30 @@ const Homepage = () => {
         <div className="absolute inset-0 bg-grid-white/10 bg-grid-16 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]" />
         <div className="relative container mx-auto px-6 py-20 lg:py-32">
           <div className="text-center max-w-4xl mx-auto">
-            <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm font-medium">
+            <Badge variant="secondary" className="mb-6 px-4 py-2 text-xl font-medium">
               <Sparkles className="w-4 h-4 mr-2" />
-              Alta Produtividade para sua Equipe Fiscal
+              🚀 Sua equipe fiscal no modo turbo
             </Badge>
             <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent leading-tight">
-              Elimine a digitação manual de NFS-e no seu sistema Domínio!
+              Esqueça digitação manual de NFS-e no Domínio.
               <span className="block text-gradient"></span>
             </h1>
-            <p className="text-xl text-muted-foreground mt-6 max-w-3xl mx-auto leading-relaxed">
-              A plataforma mais avançada do Brasil em automação de lançamentos de NFS-e.
-              <span className="block text-gradient">Economia real de tempo e dinheiro na seu depto fiscal usando IA.</span>
+            <p className="text-2xl text-muted-foreground mt-6 max-w-3xl mx-auto leading-relaxed">
+              Nossa IA captura, processa e lança tudo sozinha.
+              <span className="block text-gradient">Reduza custos, ganhe tempo e libere sua equipe para tarefas de alto valor.</span>
 
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
-              <Button size="lg" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                Criar conta
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
+              
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="text-lg px-8 py-6"
+                  onClick={() => window.open('https://wa.me/5511982520721?text=Olá! Gostaria de saber mais informações sobre o Alivee, pode me ajudar?', '_blank')}
+                >
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Começar gratuitamente
+                </Button>
               <Button 
                 variant="outline" 
                 size="lg" 
@@ -82,7 +93,7 @@ const Homepage = () => {
                 onClick={() => window.location.href = "/login"}
               >
                 <MessageSquare className="w-5 h-5 mr-2" />
-                Já tenho conta
+                Entrar na conta
               </Button>
             </div>
             <div className="flex items-center justify-center gap-8 mt-12 text-sm text-muted-foreground">
@@ -135,10 +146,10 @@ const Homepage = () => {
         <section className="py-20">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Recursos que Fazem a Diferença
+              ⚡ Recursos que Impulsionam Sua Rotina Fiscal
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Descubra por que nossa plataforma é a escolha número 1 para automação de NFS-e no seu sistema fiscal Domínio
+              O que faz da nossa plataforma a número 1 em automação de NFS-e no Domínio? Velocidade, precisão e inteligência trabalhando para você.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -147,11 +158,11 @@ const Homepage = () => {
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <Zap className="w-6 h-6 text-primary" />
                 </div>
-                <CardTitle>Conversão Instantânea</CardTitle>
+                <CardTitle>⚙️ Conversão em Segundos</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Converta seus documentos em segundos com nossa tecnologia de processamento em nuvem de última geração.
+                  Envie seu PDF. Nossa IA processa. Você recebe pronto. Tudo em nuvem, sem filas, sem espera.
                 </p>
               </CardContent>
             </Card>
@@ -161,11 +172,11 @@ const Homepage = () => {
                 <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-4">
                   <Shield className="w-6 h-6 text-secondary" />
                 </div>
-                <CardTitle>Segurança Total</CardTitle>
+                <CardTitle>🔒 Segurança de Nível Máximo</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Criptografia de ponta a ponta e exclusão automática garantem que seus documentos estejam sempre protegidos.
+                  Criptografia ponta a ponta, exclusão automática e total conformidade. Seus dados sempre protegidos.
                 </p>
               </CardContent>
             </Card>
@@ -175,11 +186,11 @@ const Homepage = () => {
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <Globe className="w-6 h-6 text-primary" />
                 </div>
-                <CardTitle>Formato Abrasf</CardTitle>
+                <CardTitle>🔄 Integração Sem Dor de Cabeça</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Compatibilidade total com seu sistema fiscal Domínio, garantindo integração perfeita e sem complicações.  
+                  Compatibilidade nativa com o Domínio. Conecte, rode e pronto — sem planilhas, sem ajustes manuais.
                 </p>
               </CardContent>
             </Card>
@@ -187,7 +198,7 @@ const Homepage = () => {
         </section>
 
         {/* Interactive Demo Section */}
-        <section className="py-20 bg-muted/30 -mx-6 px-6">
+        {/* <section className="py-20 bg-muted/30 -mx-6 px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Experimente Agora Mesmo
@@ -195,10 +206,10 @@ const Homepage = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Faça upload de um PDF e veja a magia acontecer em tempo real
             </p>
-          </div>
+          </div> */}
 
           {/* Step 1: Upload */}
-          {currentStep === 1 && (
+          {/* {currentStep === 1 && (
             <div className="max-w-2xl mx-auto animate-fade-in">
               <Card className="shadow-xl border-border/50">
                 <CardContent className="p-8 text-center">
@@ -220,10 +231,10 @@ const Homepage = () => {
                 </CardContent>
               </Card>
             </div>
-          )}
+          )} */}
 
           {/* Step 2: Conversion */}
-          {currentStep === 2 && (
+          {/* {currentStep === 2 && (
             <div className="max-w-2xl mx-auto animate-fade-in">
               <Card className="shadow-xl border-border/50">
                 <CardContent className="p-8">
@@ -257,10 +268,10 @@ const Homepage = () => {
                 </CardContent>
               </Card>
             </div>
-          )}
+          )} */}
 
           {/* Step 3: Download */}
-          {currentStep === 3 && conversionComplete && (
+          {/* {currentStep === 3 && conversionComplete && (
             <div className="max-w-2xl mx-auto animate-fade-in">
               <Card className="shadow-xl border-border/50">
                 <CardContent className="p-8 text-center">
@@ -295,13 +306,13 @@ const Homepage = () => {
               </Card>
             </div>
           )}
-        </section>
+        </section> */}
 
         {/* Testimonials */}
         <section className="py-20">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              O que nossos clientes dizem
+              💬 O que nossos clientes dizem
             </h2>
             <p className="text-xl text-muted-foreground">
               {/* Mais de 50.000 profissionais confiam em nossa plataforma */}
@@ -442,11 +453,21 @@ const Homepage = () => {
                 Junte-se a milhares de profissionais que já economizam horas todos os dias
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="text-lg px-8 py-6">
-                  Começar Gratuitamente
-                  <ChevronRight className="w-5 h-5 ml-2" />
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="text-lg px-8 py-6"
+                  onClick={() => window.open('https://wa.me/5511982520721?text=Olá! Gostaria de saber mais informações sobre o Alivee, pode me ajudar?', '_blank')}
+                >
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Começar gratuitamente
                 </Button>
-                <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="text-lg px-8 py-6"
+                  onClick={() => window.open('https://wa.me/5511982520721?text=Olá! Gostaria de saber mais informações sobre o Alivee, pode me ajudar?', '_blank')}
+                >
                   <MessageSquare className="w-5 h-5 mr-2" />
                   Falar com Especialista
                 </Button>
