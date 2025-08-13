@@ -234,13 +234,33 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   try {
     const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
     const token = localStorage.getItem("access_token");
-    const response = await fetch(`${backendUrl}/api/task-status/${taskId}/`, {
+    const url_response = `${backendUrl}/api/task-status/${taskId}/`;
+    console.log("URL da requisição:", url_response);
+
+    const response = await fetch(url_response, {
       headers: {
         "Authorization": `Bearer ${token}`,
       },
     });
-    console.log("Verificando status da tarefa:", taskId);
-    const data = await response.json();
+    console.log("Response status:", response.status);
+    console.log("Content-Type:", response.headers.get("content-type"));
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("Erro ao verificar status. Resposta bruta:", text);
+      return;
+    }
+
+    const contentType = response.headers.get("content-type");
+    let data;
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+      console.log("Dados recebidos:", data);
+    } else {
+      const text = await response.text();
+      console.error("Resposta não é JSON:", text);
+      return;
+    }
     
     if (data.state === "SUCCESS") {
       const zipUrl = data.meta?.zip_id ? `${backendUrl}/api/download-zip/${data.meta.zip_id}/` : null;

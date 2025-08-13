@@ -183,7 +183,7 @@ export function AppSidebar() {
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <h2 className="font-bold text-lg bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Alivya
+                Alivee
               </h2>
               {/* <p className="text-xs text-muted-foreground">Sistema PDF Pro</p> */}
             </div>
