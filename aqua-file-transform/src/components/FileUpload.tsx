@@ -112,7 +112,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         return q;
       }));
 
-      console.log(`Upload simulado concluído para "${fileName}" na fila ${queueId}`);
+      // console.log(`Upload simulado concluído para "${fileName}" na fila ${queueId}`);
 
       clearInterval(interval);
       } else {
@@ -185,7 +185,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         const response = await callDjangoBackend("/api/upload-e-processar-pdf/", "POST", { output_format: selectedFormat || defaultFormat }, filesToSend);
 
         const taskId = response?.task_id;
-        console.log("Task ID recebido:", taskId);
+        // console.log("Task ID recebido:", taskId);
         const jobId = Math.random().toString(36).substr(2, 9); // Só para gerenciar internamente
         setButtonText("Solicitação enviada para IA ");
         
@@ -200,6 +200,12 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       } catch (error) {
         console.error("Erro na conversão:", error);
         toast.error("Erro ao processar arquivos.");
+        // para atualizar o status da fila
+        setQueues(prev => prev.map(q => 
+            q.id === selectedQueueId 
+                ? { ...q, status: "draft" }
+                : q
+        ));
       }
     };
 
@@ -234,7 +240,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   try {
     const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
     const token = localStorage.getItem("access_token");
-    console.log("Token é:", token);
+    //  console.log("Token é:", token);
 
     if (!token) {
       console.error("Token não encontrado no localStorage");
@@ -242,16 +248,16 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       return;
     }
     const url_response = `${backendUrl}/api/task-status/${taskId}/`;
-    console.log("URL da requisição:", url_response);
-    console.log("Token sendo enviado na requisição", token)
+    // console.log("URL da requisição:", url_response);
+    // console.log("Token sendo enviado na requisição", token)
 
     const response = await fetch(url_response, {
       headers: {
         "Authorization": `Bearer ${token}`,
       },
     });
-    console.log("Response status:", response.status);
-    console.log("Content-Type:", response.headers.get("content-type"));
+    // console.log("Response status:", response.status);
+    // console.log("Content-Type:", response.headers.get("content-type"));
 
     if (!response.ok) {
       const text = await response.text();
@@ -265,16 +271,22 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     let data;
     if (contentType && contentType.includes("application/json")) {
       data = await response.json();
-      console.log("Dados recebidos:", data);
+      // console.log("Dados recebidos:", data);
     } else {
       const text = await response.text();
       console.error("Resposta não é JSON:", text);
+      // Adicione este bloco para atualizar o status da fila
+      setQueues(prev => prev.map(q => 
+          q.id === selectedQueueId 
+              ? { ...q, status: "draft" }
+              : q
+      ));
       return;
     }
     
     if (data.state === "SUCCESS") {
       const zipUrl = data.meta?.zip_id ? `${backendUrl}/api/download-zip/${data.meta.zip_id}/` : null;
-      console.log("Zip URL:", zipUrl);
+      // console.log("Zip URL:", zipUrl);
 
       // ✅ Atualiza o status da fila
       setQueues(prev =>
@@ -319,7 +331,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
 
         // Crie um array de XmlData já estruturado para salvar também:
         const userId = getUserIdFromToken();
-        console.log("UserId para salvar localStorage:", userId);
+        // console.log("UserId para salvar localStorage:", userId);
         
         const xmlFiles = Object.entries(data.meta.arquivos_resultado).map(([fileName, content]) => ({
           id: generateUUID(),
@@ -345,15 +357,27 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         // });
       }
       
-      console.log("Processamento concluído:", data);
+      // console.log("Processamento concluído:", data);
     } else if (data.state === "FAILURE") {
       toast.error("Erro ao processar seus arquivos.");
+      // Adicione este bloco para atualizar o status da fila
+      setQueues(prev => prev.map(q => 
+          q.id === selectedQueueId 
+              ? { ...q, status: "draft" }
+              : q
+      ));
     } else {
       setTimeout(() => checkTaskStatus(taskId, jobId), 3000);
     }
   } catch (err) {
     console.error("Erro ao verificar status em fila", err);
     toast.error("Erro ao consultar status da tarefa.");
+    // Adicione este bloco para atualizar o status da fila
+    setQueues(prev => prev.map(q => 
+        q.id === selectedQueueId 
+            ? { ...q, status: "draft" }
+            : q
+    ));
   }
 };
 
