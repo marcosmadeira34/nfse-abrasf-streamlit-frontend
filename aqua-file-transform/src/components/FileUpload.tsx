@@ -240,7 +240,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   try {
     const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
     const token = localStorage.getItem("access_token");
-    //  console.log("Token é:", token);
+    
 
     if (!token) {
       console.error("Token não encontrado no localStorage");
