@@ -31,7 +31,7 @@ interface ConversionQueue {
   description: string;
   files: UploadedFile[];
   createdAt: Date;
-  status: "draft" | "processing" | "completed";
+  status: "draft" | "processing" | "completed" | "error"; // Adicionamos "error"
 }
 
 interface FileUploadProps {
@@ -179,26 +179,23 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   
       try {
         toast.info(`Processamento da fila ${selectedQueue.name} iniciado.`, {});
-
         const filesToSend = selectedQueue.files.map(f => f.file); // <- arquivos reais aqui!
-
         const response = await callDjangoBackend("/api/upload-e-processar-pdf/", "POST", { output_format: selectedFormat || defaultFormat }, filesToSend);
 
         const taskId = response?.task_id;
-        // console.log("Task ID recebido:", taskId);
         const jobId = Math.random().toString(36).substr(2, 9); // Só para gerenciar internamente
         setButtonText("Solicitação enviada para IA ");
         
   
         if (taskId) {
           // Checa em background
-          checkTaskStatus(taskId, jobId);
+          checkTaskStatus(taskId, jobId, selectedQueueId); // Passam
         } else {
           toast.error("Erro ao iniciar o processamento.");
         }
         setQueues(prev => prev.map(q => 
           q.id === selectedQueueId 
-              ? { ...q, status: "draft" }
+              ? { ...q, status: "error" }
               : q
       ));
   
@@ -208,7 +205,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         // para atualizar o status da fila
         setQueues(prev => prev.map(q => 
             q.id === selectedQueueId 
-                ? { ...q, status: "draft" }
+                ? { ...q, status: "error" }
                 : q
         ));
       }
@@ -241,42 +238,36 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   }
 
   // Função para verificar o status da tarefa
-  const checkTaskStatus = async (taskId: string, jobId: string) => {
+  const checkTaskStatus = async (taskId: string, jobId: string, queueId: string) => {
   try {
     const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
-    const token = localStorage.getItem("access_token");
-    
+    const token = localStorage.getItem("access_token");    
 
     if (!token) {
       console.error("Token não encontrado no localStorage");
+      setQueues(prev => prev.map(q => 
+        q.id === queueId 
+          ? { ...q, status: "error" }
+          : q
+      ));
       toast.error("Sessão expirada. Faça login novamente.");
       return;
     }
-    const url_response = `${backendUrl}/api/task-status/${taskId}/`;
-    // console.log("URL da requisição:", url_response);
-    // console.log("Token sendo enviado na requisição", token)
 
+    const url_response = `${backendUrl}/api/task-status/${taskId}/`;
     const response = await fetch(url_response, {
       headers: {
         "Authorization": `Bearer ${token}`,
       },
     });
-    // console.log("Response status:", response.status);
-    // console.log("Content-Type:", response.headers.get("content-type"));
-
+   
     if (!response.ok) {
       const text = await response.text();
-      toast.error("Erro ao verificar status da tarefa.");
+      
       console.error("Erro ao verificar status. Resposta bruta:", text);
-      setQueues(prev => prev.map(q => 
-          q.id === selectedQueueId 
-              ? { ...q, status: "draft" }
-              : q
-      ));
-      console.error("Status da resposta:", response.statusText);
+      setTimeout(() => checkTaskStatus(taskId, jobId, queueId), 3000);
       return;
     }
-
 
     const contentType = response.headers.get("content-type");
     let data;
@@ -286,23 +277,15 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     } else {
       const text = await response.text();
       console.error("Resposta não é JSON:", text);
-      // Adicione este bloco para atualizar o status da fila
-      setQueues(prev => prev.map(q => 
-          q.id === selectedQueueId 
-              ? { ...q, status: "draft" }
-              : q
-      ));
+      setTimeout(() => checkTaskStatus(taskId, jobId, queueId), 3000);
       return;
     }
     
     if (data.state === "SUCCESS") {
       const zipUrl = data.meta?.zip_id ? `${backendUrl}/api/download-zip/${data.meta.zip_id}/` : null;
-      // console.log("Zip URL:", zipUrl);
-
-      // ✅ Atualiza o status da fila
       setQueues(prev =>
         prev.map(q =>
-          q.id === selectedQueueId
+          q.id === queueId
             ? { ...q, status: "completed" }
             : q
         )
@@ -370,27 +353,23 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       
       // console.log("Processamento concluído:", data);
     } else if (data.state === "FAILURE") {
-      toast.error("Erro ao processar seus arquivos.");
-      // Adicione este bloco para atualizar o status da fila
       setQueues(prev => prev.map(q => 
-          q.id === selectedQueueId 
-              ? { ...q, status: "draft" }
-              : q
+        q.id === queueId 
+          ? { ...q, status: "error" }
+          : q
       ));
+      toast.error("Erro ao processar seus arquivos.");
     } else {
-      setTimeout(() => checkTaskStatus(taskId, jobId), 3000);
+      // Para qualquer outro estado (PENDING, STARTED, etc), continuamos verificando
+      setTimeout(() => checkTaskStatus(taskId, jobId, queueId), 3000);
     }
   } catch (err) {
     console.error("Erro ao verificar status em fila", err);
-    toast.error("Erro ao consultar status da tarefa.");
-    // Adicione este bloco para atualizar o status da fila
-    setQueues(prev => prev.map(q => 
-        q.id === selectedQueueId 
-            ? { ...q, status: "draft" }
-            : q
-    ));
+    // Em caso de erro na verificação, continuamos tentando
+    setTimeout(() => checkTaskStatus(taskId, jobId, queueId), 3000);
   }
 };
+
 
   
   // Função para pegar o ID do usuário do token JWT
@@ -654,7 +633,8 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
               <div className="flex items-center gap-2">
           <Badge variant={
             selectedQueue.status === "draft" ? "outline" : 
-            selectedQueue.status === "processing" ? "secondary" : "default"
+            selectedQueue.status === "processing" ? "secondary" :
+            selectedQueue.status === "error" ? "destructive" : "default"
           }>
             {selectedQueue.status === "draft" ? "Conversão não iniciada" :
              selectedQueue.status === "processing" ? (
@@ -662,8 +642,25 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                  <Loader2 className="w-4 h-4 animate-spin" />
                  Processando
                </div>
-             ) : selectedQueue.status === "completed" ? "Concluída" : ""}
+             ) : selectedQueue.status === "error" ? "Erro no processamento" : "Concluída"}
           </Badge>
+          {/* // Adicionamos um botão para tentar novamente quando houver erro */}
+          {selectedQueue.status === "error" && (
+            <Button 
+              onClick={() => {
+                setQueues(prev => prev.map(q => 
+                  q.id === selectedQueueId 
+                    ? { ...q, status: "draft" }
+                    : q
+                ));
+              }}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Tentar Novamente
+            </Button>
+          )}
                 {selectedQueue.files.length > 0 && selectedQueue.status === "draft" && (
                   <Button 
                     onClick={() => startConversion()}
