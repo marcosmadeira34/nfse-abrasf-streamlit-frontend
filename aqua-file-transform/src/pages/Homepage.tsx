@@ -96,7 +96,7 @@ const Homepage = () => {
                 Entrar na conta
               </Button>
             </div>
-            <div className="flex items-center justify-center gap-8 mt-12 text-sm text-muted-foreground">
+            {/* <div className="flex items-center justify-center gap-8 mt-12 text-sm text-muted-foreground"> */}
               {/* <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-primary" />
                 Gratuito para começar
@@ -109,7 +109,7 @@ const Homepage = () => {
                 <CheckCircle className="w-4 h-4 text-primary" />
                 Setup em 2 minutos
               </div> */}
-            </div>
+            {/* </div> */}
           </div>
         </div>
       </section>

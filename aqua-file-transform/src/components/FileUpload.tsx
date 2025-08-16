@@ -255,8 +255,10 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     if (!response.ok) {
       const text = await response.text();
       console.error("Erro ao verificar status. Resposta bruta:", text);
+      console.error("Status da resposta:", response.statusText);
       return;
     }
+
 
     const contentType = response.headers.get("content-type");
     let data;
