@@ -243,6 +243,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     }
     const url_response = `${backendUrl}/api/task-status/${taskId}/`;
     console.log("URL da requisição:", url_response);
+    console.log("Token sendo enviado na requisição", token)
 
     const response = await fetch(url_response, {
       headers: {
