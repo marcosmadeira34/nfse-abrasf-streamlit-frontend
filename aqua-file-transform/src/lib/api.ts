@@ -6,7 +6,7 @@ export async function callDjangoBackend(
 ) {
   const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
   const url = `${backendUrl}${endpoint}`;
-  console.log("Calling backend URL:", url);
+  // console.log("Calling backend URL:", url);
 
   const accessToken = localStorage.getItem("access_token");
   // console.log("Access token usado:", accessToken);
@@ -19,13 +19,13 @@ export async function callDjangoBackend(
   let body: FormData | string | undefined;
 
   if (fileData && fileData.length > 0) {
-    console.log("fileData recebido:", fileData);
+    // console.log("fileData recebido:", fileData);
 
     const formData = new FormData();
     for (const pair of formData.entries()) {
       console.log(pair[0], pair[1]);
     }
-    console.log("Recebendo arquivos ao FormData:", fileData);
+    // console.log("Recebendo arquivos ao FormData:", fileData);
 
     fileData.forEach((file) => {
       formData.append("files[]", file);
@@ -62,7 +62,7 @@ export async function callDjangoBackend(
     }
 
     const responseJson = await response.json();
-    console.log("Resposta do backend:", responseJson);
+    // console.log("Resposta do backend:", responseJson);
     return responseJson;
   } catch (error: any) {
     console.error("Erro ao chamar backend:", error.message);

@@ -196,6 +196,11 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         } else {
           toast.error("Erro ao iniciar o processamento.");
         }
+        setQueues(prev => prev.map(q => 
+          q.id === selectedQueueId 
+              ? { ...q, status: "draft" }
+              : q
+      ));
   
       } catch (error) {
         console.error("Erro na conversão:", error);
@@ -261,7 +266,13 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
 
     if (!response.ok) {
       const text = await response.text();
+      toast.error("Erro ao verificar status da tarefa.");
       console.error("Erro ao verificar status. Resposta bruta:", text);
+      setQueues(prev => prev.map(q => 
+          q.id === selectedQueueId 
+              ? { ...q, status: "draft" }
+              : q
+      ));
       console.error("Status da resposta:", response.statusText);
       return;
     }
