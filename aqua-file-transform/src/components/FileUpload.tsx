@@ -182,6 +182,8 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         const filesToSend = selectedQueue.files.map(f => f.file); // <- arquivos reais aqui!
         const response = await callDjangoBackend("/api/upload-e-processar-pdf/", "POST", { output_format: selectedFormat || defaultFormat }, filesToSend);
 
+        console.log("Resposta da API:", response); // Adicionando log para depuração
+
         const taskId = response?.task_id;
         const jobId = Math.random().toString(36).substr(2, 9); // Só para gerenciar internamente
         setButtonText("Solicitação enviada para IA ");
@@ -189,25 +191,25 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   
         if (taskId) {
           // Checa em background
-          checkTaskStatus(taskId, jobId, selectedQueueId); // Passam
+          checkTaskStatus(taskId, jobId, selectedQueueId);
         } else {
-          toast.error("Erro ao iniciar o processamento.");
-        }
-        setQueues(prev => prev.map(q => 
-          q.id === selectedQueueId 
+          // Só mudamos para error se não conseguirmos o taskId
+          setQueues(prev => prev.map(q => 
+            q.id === selectedQueueId 
               ? { ...q, status: "error" }
               : q
-      ));
-  
+          ));
+          toast.error("Erro ao iniciar o processamento. Não foi recebido um ID de tarefa.");
+        }
       } catch (error) {
         console.error("Erro na conversão:", error);
-        toast.error("Erro ao processar arquivos.");
-        // para atualizar o status da fila
+        // Mudamos para error em caso de exceção
         setQueues(prev => prev.map(q => 
-            q.id === selectedQueueId 
-                ? { ...q, status: "error" }
-                : q
+          q.id === selectedQueueId 
+            ? { ...q, status: "error" }
+            : q
         ));
+        toast.error("Erro ao processar arquivos.");
       }
     };
 
@@ -255,6 +257,8 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     }
 
     const url_response = `${backendUrl}/api/task-status/${taskId}/`;
+    console.log("Verificando status da tarefa:", url_response); // Log para depuração 
+    
     const response = await fetch(url_response, {
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -262,9 +266,9 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     });
    
     if (!response.ok) {
-      const text = await response.text();
-      
+      const text = await response.text();      
       console.error("Erro ao verificar status. Resposta bruta:", text);
+      // Em caso de erro na resposta, continuamos tentando
       setTimeout(() => checkTaskStatus(taskId, jobId, queueId), 3000);
       return;
     }
@@ -273,7 +277,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     let data;
     if (contentType && contentType.includes("application/json")) {
       data = await response.json();
-      // console.log("Dados recebidos:", data);
+      console.log("Dados recebidos:", data);
     } else {
       const text = await response.text();
       console.error("Resposta não é JSON:", text);
@@ -353,6 +357,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       
       // console.log("Processamento concluído:", data);
     } else if (data.state === "FAILURE") {
+      console.error("Falha no processamento da tarefa:", data);
       setQueues(prev => prev.map(q => 
         q.id === queueId 
           ? { ...q, status: "error" }
@@ -361,6 +366,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       toast.error("Erro ao processar seus arquivos.");
     } else {
       // Para qualquer outro estado (PENDING, STARTED, etc), continuamos verificando
+      console.log("Status da tarefa:", data.state, "- Continuando a verificar...");
       setTimeout(() => checkTaskStatus(taskId, jobId, queueId), 3000);
     }
   } catch (err) {
