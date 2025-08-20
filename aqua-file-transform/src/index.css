@@ -1,44 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 /* PDF Converter Design System - Cores modernas e profissionais */
-
 @layer base {
   :root {
     --background: 0 0% 98%;
     --foreground: 219 74% 16%;
-
     --card: 0 0% 100%;
     --card-foreground: .2 47.4% 11.2%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 219 74% 16%;
-
     --primary: 219 74% 20%;
     --primary-foreground: 0 0% 98%;
     --primary-glow: 219 74% 35%;
-
     --secondary: 166 100% 49%;
     --secondary-foreground: 219 74% 16%;
     --secondary-glow: 166 100% 65%;
-
     --success: 147 82% 95%;
     --success-foreground: 147 82% 25%;
-
     --muted: 147 45% 96%;
     --muted-foreground: 219 20% 45%;
-
     --accent: 166 100% 49%;
     --accent-foreground: 219 74% 16%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-
     --border: 147 30% 88%;
     --input: 147 30% 88%;
     --ring: 219 74% 20%;
-
     /* Gradients for modern effects */
     --gradient-primary: linear-gradient(135deg, hsl(219 74% 20%), hsl(219 74% 35%));
     --gradient-secondary: linear-gradient(135deg, hsl(166 100% 49%), hsl(166 100% 65%));
@@ -49,34 +37,22 @@
     --shadow-primary: 0 10px 30px -10px hsl(219 74% 20% / 0.3);
     --shadow-glow: 0 0 40px hsl(166 100% 49% / 0.15);
     --shadow-card: 0 4px 20px -2px hsl(219 74% 20% / 0.08);
-
     --radius: 0.5rem;
-
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-
 }
-
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
@@ -85,45 +61,71 @@
   --card-foreground: 222 100% 53%;
 }
   .dark {
-  --background: 222.2 84% 4.9%;
-  /* Textos faca o upload */
-  --foreground: 210 20% 95%; 
-
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 222.2 84% 4.9%;
-
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 20% 95%;
-
-  --primary: 217 91% 60%;
-  --primary-foreground: 222.2 6.4% 11.2%;
-
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 20% 95%;
-
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 16% 75%;
-
-  --accent: 220 14% 20%;
-  --accent-foreground: 210 20% 95%;
-
-  --destructive: 0 62.8% 40.6%;
-  --destructive-foreground: 210 20% 95%;
-
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
-
-  --sidebar-background: 240 5.9% 10%;
-  --sidebar-foreground: 210 20% 95%;
-  --sidebar-primary: 217 91% 60%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 3.7% 15.9%;
-  --sidebar-accent-foreground: 210 20% 95%;
-  --sidebar-border: 240 3.7% 15.9%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
-}
-
+    /* Fundo mais suave, não tão escuro quanto preto puro */
+    --background: 215 25% 12%;
+    
+    /* Texto mais suave, não branco puro para reduzir fadiga visual */
+    --foreground: 215 20% 90%;
+    
+    /* Cards com leve contraste em relação ao fundo */
+    --card: 215 25% 16%;
+    --card-foreground: 215 20% 90%;
+    
+    /* Popover com um pouco mais de elevação */
+    --popover: 215 25% 20%;
+    --popover-foreground: 215 20% 90%;
+    
+    /* Cor primária mais suave, menos saturada */
+    --primary: 217 85% 55%;
+    --primary-foreground: 215 25% 12%;
+    --primary-glow: 217 85% 65%;
+    
+    /* Cor secundária ajustada para melhor harmonia */
+    --secondary: 166 75% 45%;
+    --secondary-foreground: 215 25% 12%;
+    --secondary-glow: 166 75% 55%;
+    
+    /* Muted com mais contraste em relação ao fundo */
+    --muted: 215 25% 20%;
+    --muted-foreground: 215 15% 60%;
+    
+    /* Accent mais visível */
+    --accent: 217 85% 55%;
+    --accent-foreground: 215 25% 12%;
+    
+    /* Destructive com menos saturação */
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 215 20% 95%;
+    
+    /* Border e input com mais contraste */
+    --border: 215 25% 25%;
+    --input: 215 25% 20%;
+    
+    /* Ring mais suave */
+    --ring: 217 85% 55%;
+    
+    /* Gradientes para o modo dark */
+    --gradient-primary: linear-gradient(135deg, hsl(217 85% 45%), hsl(217 85% 65%));
+    --gradient-secondary: linear-gradient(135deg, hsl(166 75% 35%), hsl(166 75% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 85% 45%), hsl(166 75% 45%));
+    --gradient-card: linear-gradient(145deg, hsl(215 25% 18%), hsl(215 25% 22%));
+    
+    /* Sombras ajustadas para o modo dark */
+    --shadow-primary: 0 10px 30px -10px hsl(217 85% 45% / 0.25);
+    --shadow-glow: 0 0 30px hsl(166 75% 45% / 0.15);
+    --shadow-card: 0 4px 20px -2px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 8px 24px -4px hsl(0 0% 0% / 0.4);
+    
+    /* Sidebar com melhor contraste */
+    --sidebar-background: 215 25% 14%;
+    --sidebar-foreground: 215 20% 90%;
+    --sidebar-primary: 217 85% 55%;
+    --sidebar-primary-foreground: 215 25% 12%;
+    --sidebar-accent: 215 25% 20%;
+    --sidebar-accent-foreground: 215 20% 90%;
+    --sidebar-border: 215 25% 25%;
+    --sidebar-ring: 217 85% 55%;
+  }
 
 /* Custom animations for modern interactions */
 @layer utilities {
@@ -175,8 +177,11 @@
   .shadow-card {
     box-shadow: var(--shadow-card);
   }
+  
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -187,7 +192,6 @@
     transform: translateY(0);
   }
 }
-
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -198,7 +202,6 @@
     transform: translateY(0);
   }
 }
-
 @keyframes scaleIn {
   from {
     opacity: 0;
@@ -209,7 +212,6 @@
     transform: scale(1);
   }
 }
-
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
