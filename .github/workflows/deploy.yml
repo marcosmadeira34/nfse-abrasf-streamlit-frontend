@@ -1,0 +1,42 @@
+name: Alivee development
+on:
+  push:
+    branches:
+      - dev # Aciona apenas em pushes na branch dev
+  pull_request:
+    branches:
+      - main # Aciona em PRs para main (opcional)
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Exemplo para Node.js (ajuste conforme sua stack)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  deploy-dev:
+    if: github.ref == 'refs/heads/dev' # Executa apenas na branch dev
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: development # Ambiente de dev (configurado no GitHub)
+    steps:
+      - name: Deploy to Dev
+        run: |
+          echo "Deploying to development environment..."
+          # Comandos de deploy (ex: AWS S3, Azure, Docker, etc.)
+          # Exemplo: aws s3 sync ./dist s3://dev-bucket
