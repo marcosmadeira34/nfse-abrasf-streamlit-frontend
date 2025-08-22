@@ -133,7 +133,7 @@ const Index = () => {
         </header>
         
 
-        <main className="container mx-auto px-6 py-6 flex-grow overflow-auto">
+      <main className="container mx-auto px-6 py-8">
 
 
         {/* Step 1: Upload */}

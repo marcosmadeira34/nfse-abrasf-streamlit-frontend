@@ -70,6 +70,12 @@ const mainNavItems = [
     icon: BarChart3,
     description: "Relatórios e métricas"
   },
+  //   { 
+  //   title: "Emitir NFS", 
+  //   url: "/emitir-nfse", 
+  //   icon: BarChart3,
+  //   description: "Relatórios e métricas"
+  // },
 ]
 
 const settingsItems = [

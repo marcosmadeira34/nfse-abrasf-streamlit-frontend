@@ -304,7 +304,7 @@ const Settings = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="language">Idioma</Label>
                 <Select value={preferences.language} onValueChange={(value) => 
                   setPreferences(prev => ({ ...prev, language: value }))
@@ -318,7 +318,7 @@ const Settings = () => {
                     <SelectItem value="es-ES">Español</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
 
               <div className="space-y-2">
                 <Label htmlFor="timezone">Fuso Horário</Label>
