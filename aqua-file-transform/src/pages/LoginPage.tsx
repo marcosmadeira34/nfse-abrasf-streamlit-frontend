@@ -10,39 +10,66 @@ import { Player } from '@lottiefiles/react-lottie-player';
 import Lottie from 'lottie-react';
 import animationData from '@/assets/animation.json'; // baixe de https://lottiefiles.com/
 
-// Componente separado com animação
-function LoginMarketingSide() {
+const phrases = [
+  "DEPTO FISCAL",
+  "CRESCIMENTO",
+  "OPERACIONAL",
+  "FUTURO"
+];
+
+export default function LoginMarketingSide() {
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const typingSpeed = 80; // Reduzi de 150 para 80 para aumentar a velocidade
+
+  useEffect(() => {
+    const handleTyping = () => {
+      const currentPhrase = phrases[currentPhraseIndex];
+      
+      if (!isDeleting) {
+        // Digitando
+        setCurrentText(currentPhrase.substring(0, currentText.length + 1));
+        
+        if (currentText === currentPhrase) {
+          // Pausa no final da digitação (reduzi de 2000 para 1000ms)
+          setTimeout(() => setIsDeleting(true), 1000);
+        }
+      } else {
+        // Apagando (velocidade mais rápida)
+        setCurrentText(currentPhrase.substring(0, currentText.length - 1));
+        
+        if (currentText === '') {
+          setIsDeleting(false);
+          setCurrentPhraseIndex((prevIndex) => (prevIndex + 1) % phrases.length);
+        }
+      }
+    };
+    
+    const timer = setTimeout(handleTyping, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [currentText, isDeleting, currentPhraseIndex]);
+
   return (
     <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-gray-100 text-4xl p-10">
       <motion.h1
-        className="text-7xl font-bold mb-4"
+        className="text-9xl font-bold mb-4"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
       >
         Alivee
       </motion.h1>
-
+      
       <motion.p
         className="text-2xl max-w-2xl text-center"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 1 }}
       >
-        Automatize, economize e escale seus lançamentos de NFS-e com eficiência e segurança.
+        <span className="font-semibold">SEU</span> {currentText}
+        <span className="ml-1 border-r-2 border-black animate-pulse">|</span>
       </motion.p>
-
-      {/* Ilustração opcional */}
-      {/* 
-      <motion.img
-        src="/login-illustration.svg"
-        alt="Ilustração"
-        className="w-2/3 mt-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 1 }}
-      />
-      */}
     </div>
   );
 }
