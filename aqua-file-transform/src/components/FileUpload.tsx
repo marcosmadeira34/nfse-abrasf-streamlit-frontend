@@ -865,15 +865,15 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderPlus className="w-16 h-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Nenhuma fila criada</h3>
+            <h3 className="text-xl font-semibold mb-2">Nenhuma automação criada</h3>
             <p className="text-muted-foreground text-center mb-6">
-              Crie sua primeira fila para começar a organizar e processar seus arquivos
+              Começar a organizar e processar suas NFS=e em arquivos PDF
             </p>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
-                  Criar Primeira Fila
+                  Criar Primeiro Cliente
                 </Button>
               </DialogTrigger>
             </Dialog>
