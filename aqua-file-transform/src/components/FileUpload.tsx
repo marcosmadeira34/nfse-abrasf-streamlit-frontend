@@ -867,7 +867,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
             <FolderPlus className="w-16 h-16 text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">Nenhuma automação criada</h3>
             <p className="text-muted-foreground text-center mb-6">
-              Começar a organizar e processar suas NFS=e em arquivos PDF
+              Começe a organizar e processar suas NFS=e em arquivos PDF
             </p>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
