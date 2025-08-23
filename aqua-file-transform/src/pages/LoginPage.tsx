@@ -13,14 +13,14 @@ import animationData from '@/assets/animation.json'; // baixe de https://lottief
 // Componente separado com animação
 function LoginMarketingSide() {
   return (
-    <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-blue-900 text-white p-10">
+    <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-gray-100 text-4xl p-10">
       <motion.h1
         className="text-7xl font-bold mb-4"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
       >
-        Bem-vindo! 
+        Alivee
       </motion.h1>
 
       <motion.p

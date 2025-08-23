@@ -145,7 +145,7 @@ const Index = () => {
                   <FileText className="w-8 h-8 text-primary-foreground" />
                 </div>
                 <h3 className="text-2xl font-semibold text-foreground mb-4">
-                  Gerenciar Fila de Conversão de Arquivos
+                  Automação de NFS-e com Inteligência Artificial
                 </h3>
                 {/* <p className="text-muted-foreground mb-8">
                   Selecione ou arraste seu arquivo PDF para começar a conversão

@@ -551,7 +551,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                         toast.success("Fila excluída!");
                       }} className="text-destructive">
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Excluir fila
+                        Excluir cliente
                       </DropdownMenuItem>
                     </>
                   )}
@@ -792,7 +792,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir Fila
+                    Excluir Cliente
                   </Button>
                 )}
               </div>
@@ -808,23 +808,23 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       {/* Cabeçalho */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Gerenciamento de Arquivos NFS-e</h1>
-          <p className="text-muted-foreground">Organize, processe e baixe seus arquivos de notas fiscais</p>
+          {/* <h1 className="text-2xl font-bold text-foreground">Gerenciamento de Arquivos NFS-e</h1> */}
+          <p className="text-muted-foreground">Crie novos clientes, adicione arquivos pdf de NFS-e e processe-os de forma eficiente.</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2 hover:text-green-500">
               <Plus className="w-4 h-4" />
-              Nova Fila
+              Novo Cliente
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Nova Fila de Conversão</DialogTitle>
+              {/* <DialogTitle>Criar Nova Fila de Conversão</DialogTitle> */}
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="queueName">Nome da Fila</Label>
+                <Label htmlFor="queueName">Nome do Cliente</Label>
                 <Input
                   id="queueName"
                   placeholder="Ex: Empresa X - Contratos"
@@ -842,7 +842,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                 />
               </div>
               <Button onClick={createNewQueue} className="w-full">
-                Criar Fila
+                Criar Cliente
               </Button>
             </div>
           </DialogContent>
