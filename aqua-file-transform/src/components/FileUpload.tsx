@@ -491,7 +491,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2 text-green-500">
                 {queue.name}
                 <Badge variant={
                   queue.status === "draft" ? "outline" : 
@@ -501,7 +501,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                   {queue.status === "draft" ? "Não iniciado" :
                    queue.status === "processing" ? (
                      <div className="flex items-center gap-1">
-                       <Loader2 className="h-3 w-3 animate-spin" />
+                       <Loader2 className="h-5 w-5 animate-spin text-green-500" />
                        Processando
                      </div>
                    ) : 
@@ -575,7 +575,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         
         <CardContent className="space-y-4">
           {/* Barra de status de conversão */}
-          {queue.status === "processing" && (
+          {/* {queue.status === "processing" && (
             <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -599,7 +599,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                 </div>
               )}
             </div>
-          )}
+          )} */}
           
           {/* Área de upload de arquivos */}
           {queue.status === "draft" && (
@@ -813,7 +813,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2 hover:text-green-500">
               <Plus className="w-4 h-4" />
               Nova Fila
             </Button>
