@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { useTickets } from "@/hooks/use-tickets"
+import { LogOut } from "lucide-react";
 
 const mainNavItems = [
   { 
@@ -97,6 +98,12 @@ const settingsItems = [
     icon: HelpCircle,
     description: "Central de ajuda"
   },
+  {
+    title: "Sair",
+    url: "/logout",
+    icon: LogOut,
+    description: "Encerrar sessão"
+  }
 ]
 
 export function AppSidebar() {
