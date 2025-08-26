@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, X, CheckCircle, Plus, FolderPlus, Send, Trash2, Settings, Download, MoreVertical, Loader2, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+
 
 interface UploadedFile {
   id: string;
@@ -938,6 +940,9 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="queueName">Nome do Cliente</Label>
+                <DialogDescription>
+        Crie um novo cliente para organizar e processar seus arquivos PDF de NFS-e.
+      </DialogDescription>
                 <Input
                   id="queueName"
                   placeholder="Ex: Empresa X - Contratos"
@@ -1000,9 +1005,9 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
           <DialogHeader>
             <DialogTitle>Remover Arquivo</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Tem certeza que deseja remover este arquivo da fila?
-          </p>
+          <DialogDescription>
+        Tem certeza que deseja remover este arquivo da fila? Esta ação não pode ser desfeita.
+      </DialogDescription>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setFileToRemove(null)}>
               Cancelar
