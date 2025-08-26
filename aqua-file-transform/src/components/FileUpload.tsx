@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, X, CheckCircle, Plus, FolderPlus, Send, Trash2, Settings, Download, MoreVertical, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Upload, FileText, X, CheckCircle, Plus, FolderPlus, Send, Trash2, Settings, Download, MoreVertical, Loader2, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -36,6 +36,9 @@ interface ConversionQueue {
   files: UploadedFile[];
   createdAt: Date;
   status: "draft" | "processing" | "completed" | "error";
+  processingStartTime?: Date; // Quando o processamento começou
+  processingEndTime?: Date;   // Quando o processamento terminou
+  processingDuration?: number; // Duração total em segundos
 }
 
 interface FileUploadProps {
@@ -58,13 +61,51 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   const [newQueueDescription, setNewQueueDescription] = useState("");
   const [fileToRemove, setFileToRemove] = useState<{ queueId: string; fileId: string } | null>(null);
   const [activeTasks, setActiveTasks] = useState<ActiveTask[]>([]);
-  
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Atualizar o tempo atual a cada segundo
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const formatDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    }
+    return `${secs}s`;
+  };
+
+  const getElapsedTime = (startTime: Date, endTime?: Date) => {
+    const now = endTime || new Date();
+    const diffInSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+    
+    const hours = Math.floor(diffInSeconds / 3600);
+    const minutes = Math.floor((diffInSeconds % 3600) / 60);
+    const seconds = diffInSeconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const createNewQueue = () => {
@@ -135,7 +176,6 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     if (invalidFiles.length) {
       toast.error(`Arquivos inválidos: ${invalidFiles.join(", ")}. Apenas arquivos PDF são permitidos.`);
     }
-
     const newFiles: UploadedFile[] = validFiles.map(f => ({
       id: uuidv4(),
       name: f.name,
@@ -170,7 +210,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         console.error("Token não encontrado no localStorage");
         setQueues(prev => prev.map(q => 
           q.id === queueId 
-            ? { ...q, status: "error" }
+            ? { ...q, status: "error", processingEndTime: new Date() }
             : q
         ));
         toast.error("Sessão expirada. Faça login novamente.");
@@ -212,10 +252,18 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         console.log("Processamento concluído com sucesso. URL do ZIP:", zipUrl);
         const queue = queues.find(q => q.id === queueId);
         
+        const endTime = new Date();
         setQueues(prev =>
           prev.map(q =>
             q.id === queueId
-              ? { ...q, status: "completed" }
+              ? { 
+                  ...q, 
+                  status: "completed", 
+                  processingEndTime: endTime,
+                  processingDuration: q.processingStartTime 
+                    ? Math.floor((endTime.getTime() - q.processingStartTime.getTime()) / 1000)
+                    : undefined
+                }
               : q
           )
         );
@@ -265,9 +313,17 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         }
       } else if (data.state === "FAILURE") {
         console.error("Falha no processamento da tarefa:", data);
+        const endTime = new Date();
         setQueues(prev => prev.map(q => 
           q.id === queueId 
-            ? { ...q, status: "error" }
+            ? { 
+                ...q, 
+                status: "error", 
+                processingEndTime: endTime,
+                processingDuration: q.processingStartTime 
+                  ? Math.floor((endTime.getTime() - q.processingStartTime.getTime()) / 1000)
+                  : undefined
+              }
             : q
         ));
         // Remover a tarefa da lista de ativas
@@ -291,9 +347,10 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     }
     
     const defaultFormat = "xml";
+    const startTime = new Date();
     setQueues(prev => prev.map(q => 
       q.id === queueId 
-        ? { ...q, status: "processing" }
+        ? { ...q, status: "processing", processingStartTime: startTime }
         : q
     ));
     
@@ -321,18 +378,30 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         
         checkTaskStatus(taskId, jobId, queueId);
       } else {
+        const endTime = new Date();
         setQueues(prev => prev.map(q => 
           q.id === queueId 
-            ? { ...q, status: "error" }
+            ? { 
+                ...q, 
+                status: "error", 
+                processingEndTime: endTime,
+                processingDuration: Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
+              }
             : q
         ));
         toast.error("Erro ao iniciar o processamento. Não foi recebido um ID de tarefa.");
       }
     } catch (error) {
       console.error("Erro na conversão:", error);
+      const endTime = new Date();
       setQueues(prev => prev.map(q => 
         q.id === queueId 
-          ? { ...q, status: "error" }
+          ? { 
+              ...q, 
+              status: "error", 
+              processingEndTime: endTime,
+              processingDuration: Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
+            }
           : q
       ));
       toast.error("Erro ao processar arquivos.");
@@ -383,6 +452,12 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
           const parsed = JSON.parse(savedQueues);
           parsed.forEach((q: any) => {
             q.createdAt = new Date(q.createdAt);
+            if (q.processingStartTime) {
+              q.processingStartTime = new Date(q.processingStartTime);
+            }
+            if (q.processingEndTime) {
+              q.processingEndTime = new Date(q.processingEndTime);
+            }
             if (!["draft", "processing", "completed"].includes(q.status)) {
               q.status = "draft";
             }
@@ -419,7 +494,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
               // Se a tarefa é muito antiga, remover da lista e marcar como erro
               setQueues(prev => prev.map(q => 
                 q.id === task.queueId 
-                  ? { ...q, status: "error" }
+                  ? { ...q, status: "error", processingEndTime: new Date() }
                   : q
               ));
               
@@ -575,7 +650,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
         
         <CardContent className="space-y-4">
           {/* Barra de status de conversão */}
-          {/* {queue.status === "processing" && (
+          {queue.status === "processing" && (
             <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -598,8 +673,15 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                   <span className="truncate">Convertendo: {processingFile.name}</span>
                 </div>
               )}
+              {/* Cronômetro */}
+              {queue.processingStartTime && (
+                <div className="flex items-center text-sm text-blue-700 bg-blue-100 p-2 rounded">
+                  <Clock className="h-3 w-3 mr-1" />
+                  <span>Tempo decorrido: {getElapsedTime(queue.processingStartTime)}</span>
+                </div>
+              )}
             </div>
-          )} */}
+          )}
           
           {/* Área de upload de arquivos */}
           {queue.status === "draft" && (
@@ -733,6 +815,37 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                   <span className="text-sm text-muted-foreground">Total de Arquivos:</span>
                   <p className="text-sm">{queue.files.length}</p>
                 </div>
+                {/* Informações de processamento */}
+                {(queue.processingStartTime || queue.processingEndTime || queue.processingDuration) && (
+                  <>
+                    <div>
+                      <span className="text-sm text-muted-foreground">Início do Processamento:</span>
+                      <p className="text-sm">
+                        {queue.processingStartTime 
+                          ? queue.processingStartTime.toLocaleString() 
+                          : "Não registrado"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-muted-foreground">Término do Processamento:</span>
+                      <p className="text-sm">
+                        {queue.processingEndTime 
+                          ? queue.processingEndTime.toLocaleString() 
+                          : "Em andamento"}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-sm text-muted-foreground">Duração do Processamento:</span>
+                      <p className="text-sm">
+                        {queue.processingDuration 
+                          ? formatDuration(queue.processingDuration)
+                          : queue.processingStartTime 
+                            ? getElapsedTime(queue.processingStartTime, queue.processingEndTime)
+                            : "Não iniciado"}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
               
               {/* Lista completa de arquivos */}
@@ -848,7 +961,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
           </DialogContent>
         </Dialog>
       </div>
-
+      
       {/* Lista de Filas */}
       {queues.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -880,7 +993,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
           </CardContent>
         </Card>
       )}
-
+      
       {/* Diálogo de confirmação para remover arquivo */}
       <Dialog open={!!fileToRemove} onOpenChange={(open) => !open && setFileToRemove(null)}>
         <DialogContent>

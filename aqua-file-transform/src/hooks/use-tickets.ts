@@ -54,58 +54,71 @@ export const useTickets = () => {
     }
   ]);
 
-      const createTicket = useCallback(
-      async (ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'attachments'> & { attachments?: File[] }) => {
-        const formData = new FormData();
-        formData.append('subject', ticketData.subject);
-        formData.append('description', ticketData.description);
-        formData.append('priority', ticketData.priority);
+  const createTicket = useCallback(
+  async (ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { attachments?: File[] }) => {
+    const formData = new FormData();
+    formData.append('subject', ticketData.subject);
+    formData.append('description', ticketData.description);
+    formData.append('priority', ticketData.priority);
+    
+    // Log para verificar os anexos
+    console.log('Anexos a serem enviados:', ticketData.attachments);
+    
+    if (ticketData.attachments && ticketData.attachments.length > 0) {
+      ticketData.attachments.forEach((file, index) => {
+        console.log(`Adicionando anexo ${index}:`, file.name, file.size);
+        formData.append('attachments', file);
+      });
+    } else {
+      console.log('Nenhum anexo para enviar');
+      formData.append('attachments', '');
+    }
 
-        if (ticketData.attachments) {
-          ticketData.attachments.forEach(file => formData.append('attachments', file));
-        }
-
-        const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
-        if (!backendUrl) throw new Error('VITE_DJANGO_BACKEND_URL não definido');
-
-        const token = localStorage.getItem('access_token');
-
-        const response = await fetch(`${backendUrl}/support-ticket/`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-
-        console.log('Response status:', response.status);
-        console.log('Response data:', response);
-
-        const text = await response.text();
-        let result;
-        try {
-          result = JSON.parse(text);
-        } catch {
-          throw new Error(`Resposta inválida do backend: ${text}`);
-        }
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Erro desconhecido');
-        }
-
-        return result.ticket || {
-          id: Date.now().toString(),
-          subject: ticketData.subject,
-          description: ticketData.description,
-          priority: ticketData.priority,
-          status: 'aberto',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        
+    const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
+    if (!backendUrl) throw new Error('VITE_DJANGO_BACKEND_URL não definido');
+    const token = localStorage.getItem('access_token');
+    
+    // Log da requisição
+    console.log('Enviando requisição para:', `${backendUrl}/api/support-ticket/`);
+    
+    const response = await fetch(`${backendUrl}/api/support-ticket/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // NÃO adicione 'Content-Type' aqui! O navegador define automaticamente para multipart/form-data
       },
-      []
-    );
+      body: formData,
+    });
+
+    console.log('Response status:', response.status);
+    const text = await response.text();
+    console.log('Resposta bruta do backend:', text);
+    
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      throw new Error(`Resposta inválida do backend: ${text}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Erro desconhecido');
+    }
+
+    // Incluir os anexos no ticket retornado (mesmo que o backend não os retorne)
+    return result.ticket || {
+      id: Date.now().toString(),
+      subject: ticketData.subject,
+      description: ticketData.description,
+      priority: ticketData.priority,
+      status: 'aberto',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      attachments: ticketData.attachments || [], // Adicionar os anexos enviados
+    };
+  },
+  []
+);
 
   const updateTicketStatus = useCallback((ticketId: string, status: Ticket['status']) => {
     setTickets(prev => prev.map(ticket => 

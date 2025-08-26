@@ -270,9 +270,9 @@ const Settings = () => {
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">Geral</TabsTrigger>
-          <TabsTrigger value="notifications">Notificações</TabsTrigger>
+          {/* <TabsTrigger value="notifications">Notificações</TabsTrigger>
           <TabsTrigger value="security">Segurança</TabsTrigger>
-          <TabsTrigger value="api">API</TabsTrigger>
+          <TabsTrigger value="api">API</TabsTrigger> */}
         </TabsList>
 
 
@@ -338,7 +338,7 @@ const Settings = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Download className="w-5 h-5" />
@@ -357,7 +357,7 @@ const Settings = () => {
                   checked={preferences.autoDownload}
                   onCheckedChange={(checked) => {
                     setPreferences(prev => ({ ...prev, autoDownload: checked }));
-                    // Aplicar a configuração imediatamente
+                    
                     applyAutoDownload(checked);
                   }}
                 />
@@ -367,7 +367,7 @@ const Settings = () => {
                 <Label htmlFor="deleteAfterDays">Exclusão Automática</Label>
                 <Select value={preferences.deleteAfterDays} onValueChange={(value) => {
                   setPreferences(prev => ({ ...prev, deleteAfterDays: value }));
-                  // Aplicar a configuração imediatamente
+                  
                   applyAutoDelete(value);
                 }}>
                   <SelectTrigger>
@@ -385,7 +385,7 @@ const Settings = () => {
                 </p>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">

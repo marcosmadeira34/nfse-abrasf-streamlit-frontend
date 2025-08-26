@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   User, 
   Mail, 
@@ -11,7 +11,8 @@ import {
   Camera,
   Shield,
   Award,
-  Activity
+  Activity,
+  AlertCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,30 +22,64 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { callDjangoBackend } from "@/lib/api";
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
-    name: "João Silva",
-    email: "joao.silva@email.com",
-    phone: "+55 (11) 99999-9999",
-    location: "São Paulo, SP",
-    bio: "Especialista em conversão de documentos e automação de processos. Trabalho com PDF e documentos digitais há mais de 5 anos.",
-    company: "Tech Solutions Ltda",
-    position: "Analista de Sistemas",
-    joinDate: "2023-01-15"
+    user_name: "",
+    phone_number: "",
+    firm: "",
+    email: "",
+    role: "",
+    created_at: ""
   });
-
   const [editedProfile, setEditedProfile] = useState(profile);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSave = () => {
-    setProfile(editedProfile);
-    setIsEditing(false);
+  // Carregar dados do perfil do backend
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        // Usando a função callDjangoBackend com método GET
+        const data = await callDjangoBackend("/api/profile/", "GET");
+        setProfile(data);
+        setEditedProfile(data);
+      } catch (err) {
+        setError(err.message);
+        console.error('Erro ao carregar perfil:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setError(null);
+    
+    try {
+      // Usando a função callDjangoBackend com método POST
+      const updatedProfile = await callDjangoBackend("/api/profile/", "POST", editedProfile);
+      setProfile(updatedProfile);
+      setIsEditing(false);
+    } catch (err) {
+      setError(err.message);
+      console.error('Erro ao salvar perfil:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
     setEditedProfile(profile);
     setIsEditing(false);
+    setError(null);
   };
 
   const stats = [
@@ -53,26 +88,16 @@ const Profile = () => {
     { label: "Tempo Economizado", value: "42.5h", icon: Award }
   ];
 
-  const recentActivity = [
-    {
-      action: "Converteu documento",
-      file: "Relatório_Anual.pdf",
-      time: "2 horas atrás",
-      status: "success"
-    },
-    {
-      action: "Abriu ticket de suporte",
-      file: "#TICKET-001",
-      time: "1 dia atrás",
-      status: "pending"
-    },
-    {
-      action: "Baixou arquivo convertido",
-      file: "Planilha_Custos.xlsx",
-      time: "2 dias atrás",
-      status: "success"
-    }
-  ];
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Carregando perfil...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -85,7 +110,16 @@ const Profile = () => {
           Gerencie suas informações pessoais e preferências
         </p>
       </div>
-
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information */}
         <div className="lg:col-span-2 space-y-6">
@@ -106,9 +140,9 @@ const Profile = () => {
                     <X className="w-4 h-4 mr-2" />
                     Cancelar
                   </Button>
-                  <Button size="sm" onClick={handleSave}>
+                  <Button size="sm" onClick={handleSave} disabled={isSaving}>
                     <Save className="w-4 h-4 mr-2" />
-                    Salvar
+                    {isSaving ? 'Salvando...' : 'Salvar'}
                   </Button>
                 </div>
               )}
@@ -118,9 +152,9 @@ const Profile = () => {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Avatar className="w-20 h-20">
-                    <AvatarImage src="" alt={profile.name} />
+                    <AvatarImage src="" alt={profile.user_name} />
                     <AvatarFallback className="text-xl">
-                      {profile.name.split(' ').map(n => n[0]).join('')}
+                      {profile.user_name ? profile.user_name.split(' ').map(n => n[0]).join('') : 'U'}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -134,137 +168,98 @@ const Profile = () => {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold">{profile.name}</h3>
-                  <p className="text-muted-foreground">{profile.position}</p>
+                  <h3 className="text-xl font-semibold">{profile.user_name || 'Nome não informado'}</h3>
+                  <p className="text-muted-foreground">{profile.role}</p>
                   <Badge variant="secondary" className="mt-1">
-                    Membro desde {new Date(profile.joinDate).toLocaleDateString('pt-BR')}
+                    Membro desde {profile.created_at ? new Date(profile.created_at).toLocaleDateString('pt-BR') : 'Data não disponível'}
                   </Badge>
                 </div>
               </div>
-
               <Separator />
-
               {/* Form Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo</Label>
+                  <Label htmlFor="user_name">Nome Completo</Label>
                   {isEditing ? (
                     <Input
-                      id="name"
-                      value={editedProfile.name}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, name: e.target.value }))}
+                      id="user_name"
+                      value={editedProfile.user_name || ''}
+                      onChange={(e) => setEditedProfile(prev => ({ ...prev, user_name: e.target.value }))}
                     />
                   ) : (
                     <div className="flex items-center gap-2 p-2">
                       <User className="w-4 h-4 text-muted-foreground" />
-                      <span>{profile.name}</span>
+                      <span>{profile.user_name || 'Não informado'}</span>
                     </div>
                   )}
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   {isEditing ? (
                     <Input
                       id="email"
                       type="email"
-                      value={editedProfile.email}
+                      value={editedProfile.email || ''}
                       onChange={(e) => setEditedProfile(prev => ({ ...prev, email: e.target.value }))}
                     />
                   ) : (
                     <div className="flex items-center gap-2 p-2">
                       <Mail className="w-4 h-4 text-muted-foreground" />
-                      <span>{profile.email}</span>
+                      <span>{profile.email || 'Não informado'}</span>
                     </div>
                   )}
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
+                  <Label htmlFor="phone_number">Telefone</Label>
                   {isEditing ? (
                     <Input
-                      id="phone"
-                      value={editedProfile.phone}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, phone: e.target.value }))}
+                      id="phone_number"
+                      value={editedProfile.phone_number || ''}
+                      onChange={(e) => setEditedProfile(prev => ({ ...prev, phone_number: e.target.value }))}
                     />
                   ) : (
                     <div className="flex items-center gap-2 p-2">
                       <Phone className="w-4 h-4 text-muted-foreground" />
-                      <span>{profile.phone}</span>
+                      <span>{profile.phone_number || 'Não informado'}</span>
                     </div>
                   )}
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="location">Localização</Label>
+                  <Label htmlFor="firm">Empresa</Label>
                   {isEditing ? (
                     <Input
-                      id="location"
-                      value={editedProfile.location}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, location: e.target.value }))}
+                      id="firm"
+                      value={editedProfile.firm || ''}
+                      onChange={(e) => setEditedProfile(prev => ({ ...prev, firm: e.target.value }))}
                     />
                   ) : (
                     <div className="flex items-center gap-2 p-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span>{profile.location}</span>
+                      <span>{profile.firm || 'Não informado'}</span>
                     </div>
                   )}
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="company">Empresa</Label>
+                  <Label htmlFor="role">Cargo</Label>
                   {isEditing ? (
                     <Input
-                      id="company"
-                      value={editedProfile.company}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, company: e.target.value }))}
+                      id="role"
+                      value={editedProfile.role || ''}
+                      onChange={(e) => setEditedProfile(prev => ({ ...prev, role: e.target.value }))}
                     />
                   ) : (
                     <div className="flex items-center gap-2 p-2">
-                      <span>{profile.company}</span>
+                      <span>{profile.role || 'Não informado'}</span>
                     </div>
                   )}
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="position">Cargo</Label>
-                  {isEditing ? (
-                    <Input
-                      id="position"
-                      value={editedProfile.position}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, position: e.target.value }))}
-                    />
-                  ) : (
-                    <div className="flex items-center gap-2 p-2">
-                      <span>{profile.position}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Biografia</Label>
-                {isEditing ? (
-                  <Textarea
-                    id="bio"
-                    value={editedProfile.bio}
-                    onChange={(e) => setEditedProfile(prev => ({ ...prev, bio: e.target.value }))}
-                    rows={3}
-                  />
-                ) : (
-                  <p className="text-sm text-muted-foreground p-2 bg-muted/30 rounded-md">
-                    {profile.bio}
-                  </p>
-                )}
               </div>
             </CardContent>
           </Card>
         </div>
-
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Statistics */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
@@ -282,32 +277,7 @@ const Profile = () => {
                 </div>
               ))}
             </CardContent>
-          </Card>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Atividade Recente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.status === 'success' ? 'bg-success' : 'bg-warning'
-                    }`} />
-                    <span className="text-sm font-medium">{activity.action}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground ml-4">
-                    {activity.file} • {activity.time}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>

@@ -25,23 +25,23 @@ const Help = () => {
   const faqItems = [
     {
       question: "Como fazer upload de um arquivo PDF?",
-      answer: "Para fazer upload de um PDF, clique no botão 'Escolher arquivo' na página inicial ou arraste o arquivo diretamente para a área de upload. Suportamos arquivos de até 50MB."
+      answer: "Para fazer upload de um PDF, clique no botão 'Escolher arquivo' na página inicial ou arraste o arquivo diretamente para a área de upload. Suportamos arquivos de até 100MB."
     },
     {
       question: "Quais formatos de conversão são suportados?",
-      answer: "Suportamos conversão de PDF para DOCX, XLSX, PPTX, HTML, TXT e JPG. Também oferecemos conversão de outros formatos para PDF."
+      answer: "Suportamos conversão apenas de PDF para XML padrão ABRASF no layout 1.0."
     },
     {
       question: "Quanto tempo leva para converter um arquivo?",
-      answer: "A maioria das conversões é concluída em segundos. Arquivos maiores podem levar alguns minutos. Você receberá uma notificação quando a conversão estiver pronta."
+      answer: "A maioria das conversões é concluída numa média de 15 segundos por arquivo. Você receberá uma notificação quando a conversão estiver pronta."
     },
     {
       question: "Meus arquivos são seguros?",
-      answer: "Sim, todos os arquivos são criptografados durante o upload e processamento. Arquivos são automaticamente excluídos após 30 dias para garantir sua privacidade."
+      answer: "Sim, todos os arquivos são criptografados durante o upload e processamento. Arquivos são automaticamente excluídos após a conversão e não são armazenados para garantir sua privacidade."
     },
     {
       question: "Como posso entrar em contato com o suporte?",
-      answer: "Você pode abrir um ticket de suporte através do botão 'Suporte' no header, enviar email para suporte@patrimonium.com ou ligar para (11) 9999-9999."
+      answer: "Você pode abrir um ticket de suporte através do botão 'Suporte' no header, enviar email para mmadeirasilva5@gmail.com ou enviar mensagem no Whatsapp (11) 98252-0721."
     },
     // {
     //   question: "Existe limite de conversões?",
@@ -153,9 +153,9 @@ const Help = () => {
       <Tabs defaultValue="faq" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="faq">FAQ</TabsTrigger>
-          <TabsTrigger value="guides">Guias</TabsTrigger>
-          <TabsTrigger value="videos">Vídeos</TabsTrigger>
-          <TabsTrigger value="contact">Contato</TabsTrigger>
+          {/* <TabsTrigger value="guides">Guias</TabsTrigger>
+          <TabsTrigger value="videos">Vídeos</TabsTrigger> */}
+          {/* <TabsTrigger value="contact">Contato</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="faq" className="space-y-6">
