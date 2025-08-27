@@ -600,7 +600,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                 {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
               
-              <DropdownMenu>
+              {/* <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                     <MoreVertical className="h-4 w-4" />
@@ -645,7 +645,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenu> */}
             </div>
           </div>
         </CardHeader>
@@ -894,7 +894,25 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                 </div>
               )}
               
-              {/* Ações adicionais */}
+              {/* Ações adicionais excluir cliente*/}
+              {/* Ações adicionais limpar arquivos*/}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setQueues(prev => prev.map(q =>
+                      q.id === queue.id
+                        ? { ...q, files: [], status: "draft" }
+                        : q
+                    ));
+                    toast.success("Arquivos removidos da fila!");
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Limpar Arquivos
+                </Button>
+              </div>
+
               <div className="flex gap-2">
                 {queue.status !== "processing" && (
                   <Button 
@@ -909,8 +927,10 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                     <Trash2 className="h-4 w-4 mr-2" />
                     Excluir Cliente
                   </Button>
+                  
                 )}
               </div>
+              
             </div>
           )}
         </CardContent>
