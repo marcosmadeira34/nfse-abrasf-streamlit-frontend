@@ -181,6 +181,10 @@
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
   }
+  .zoom-in-fade {
+    box-shadow: var(--zoom-in-fade);
+    animation: zoomInFade 0.5s ease forwards;
+  }
 }
 @keyframes fadeIn {
   from {

@@ -1,0 +1,87 @@
+<Nfse versao="1.00">
+  <InfNfse Id="">
+    <Numero>8</Numero>
+    <CodigoVerificacao></CodigoVerificacao>
+    <DataEmissao>2025-08-26T00:00:00</DataEmissao>
+    <ValoresNfse>
+      <BaseCalculo>171783.06</BaseCalculo>
+      <Aliquota>4.28</Aliquota>
+      <ValorIss>0.00</ValorIss>
+      <ValorLiquidoNfse>171783.06</ValorLiquidoNfse>
+    </ValoresNfse>
+    <PrestadorServico>
+      <IdentificacaoPrestador>
+        <CpfCnpj>
+          <Cnpj>60546419000175</Cnpj>
+        </CpfCnpj>
+        <InscricaoMunicipal></InscricaoMunicipal>
+      </IdentificacaoPrestador>
+      <RazaoSocial>CV SERVICE LTDA</RazaoSocial>
+      <NomeFantasia>CV SERVICE LTDA</NomeFantasia>
+      <Endereco>
+        <Endereco>VÂNIUS ABÍLIO DOS SANTOS - ANEXO SOBRADO 08, 3071</Endereco>
+        <Numero>3071</Numero>
+        <Bairro>PARQUE SANTO ANTÔNIO</Bairro>
+        <CodigoMunicipio>4309209</CodigoMunicipio>
+        <CodigoPais>1058</CodigoPais>
+        <Cep>94170994</Cep>
+      </Endereco>
+      <Contato>
+        <Telefone>51985063401</Telefone>
+        <Email>nfe@industriavisual.com.br</Email>
+      </Contato>
+    </PrestadorServico>
+    <OrgaoGerador>
+      <CodigoMunicipio>4309209</CodigoMunicipio>
+      <Uf>RS</Uf>
+    </OrgaoGerador>
+    <DeclaracaoPrestacaoServico>
+      <InfDeclaracaoPrestacaoServico>
+        <Competencia>2025-08-26</Competencia>
+        <Servico>
+          <Valores>
+            <IssRetido>2</IssRetido>
+            <Aliquota>4.28</Aliquota>
+            <ValorServicos>171783.06</ValorServicos>
+            <ValorDeducoes>0.00</ValorDeducoes>
+            <ValorPis>0.00</ValorPis>
+            <ValorCofins>0.00</ValorCofins>
+            <ValorInss>0.00</ValorInss>
+            <ValorIr>0.00</ValorIr>
+            <ValorCsll>0.00</ValorCsll>
+            <ValorIss>0.00</ValorIss>
+            <OutrasRetencoes>0.00</OutrasRetencoes>
+            <DescontoIncondicional>0.00</DescontoIncondicional>
+            <DescontoCondicionado>0.00</DescontoCondicionado>
+          </Valores>
+          <ItemListaServico>1702</ItemListaServico>
+          <Discriminacao>TERCEIRIZAÇÃO DE SERVIÇO Datilografia, digitação, estenografia, expediente, secretaria em geral, resposta audível, redação, edição, interpretação, revisão, tradução, apoio e infraestrutura administrativa e congêneres.</Discriminacao>
+          <CodigoMunicipio>4309209</CodigoMunicipio>
+          <CodigoPais>1058</CodigoPais>
+          <ExigibilidadeISS>1</ExigibilidadeISS>
+          <MunicipioIncidencia>4309209</MunicipioIncidencia>
+        </Servico>
+        <Tomador>
+          <IdentificacaoTomador>
+            <CpfCnpj>
+              <Cnpj>34198269000308</Cnpj>
+            </CpfCnpj>
+          </IdentificacaoTomador>
+          <RazaoSocial>SP VISUAL PRINT LTDA</RazaoSocial>
+          <Endereco>
+            <Endereco>AV CARLOS GOMES 222</Endereco>
+            <Numero>222</Numero>
+            <Bairro>BOA VISTA</Bairro>
+            <CodigoMunicipio>4314902</CodigoMunicipio>
+            <CodigoPais>1058</CodigoPais>
+            <Cep>90480000</Cep>
+          </Endereco>
+          <Contato>
+            <Telefone></Telefone>
+            <Email></Email>
+          </Contato>
+        </Tomador>
+      </InfDeclaracaoPrestacaoServico>
+    </DeclaracaoPrestacaoServico>
+  </InfNfse>
+</Nfse>

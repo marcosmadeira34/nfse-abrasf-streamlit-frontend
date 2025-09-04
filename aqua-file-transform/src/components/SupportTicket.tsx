@@ -27,6 +27,7 @@ const SupportTicket = () => {
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
+  const [email, setEmail] = useState("");
   const [priority, setPriority] = useState<'baixa' | 'media' | 'alta' | 'urgente'>('media');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,6 +122,17 @@ const SupportTicket = () => {
               placeholder="Ex: Erro na conversão de PDF"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="subject">E-mail para resposta *</Label>
+            <Input
+              id="email"
+              placeholder="example@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>

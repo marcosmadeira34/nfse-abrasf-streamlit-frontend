@@ -24,6 +24,7 @@ interface ConversionData {
   timestamp: string;
   startTime?: string; // Para calcular tempo de processamento
   endTime?: string; // Para calcular tempo de processamento
+  userId?: string; // Adicionar este campo
 }
 
 interface XmlFile {
@@ -411,22 +412,22 @@ const Analytics = () => {
           trendValue={`${trends.totalConversions.value} vs período anterior`}
           icon={<FileText className="w-6 h-6" />}
         />
-        <MetricsCard
+        {/* <MetricsCard
           title="Taxa de Sucesso"
           value={`${metrics.successRate}%`}
           subtitle="Conversões bem-sucedidas"
           trend={trends.successRate.trend as "up" | "down"}
           trendValue={`${trends.successRate.value} vs período anterior`}
           icon={<TrendingUp className="w-6 h-6" />}
-        />
-        <MetricsCard
+        /> */}
+        {/* <MetricsCard
           title="Usuários Ativos"
           value={metrics.activeUsers.toString()}
           subtitle="Usuários únicos"
           trend={trends.activeUsers.trend as "up" | "down"}
           trendValue={`${trends.activeUsers.value} vs período anterior`}
           icon={<Users className="w-6 h-6" />}
-        />
+        /> */}
         <MetricsCard
           title="Tempo Médio"
           value={`${metrics.avgProcessingTime}s`}
@@ -435,14 +436,14 @@ const Analytics = () => {
           trendValue="vs 2-3 minutos manual"
           icon={<Clock className="w-6 h-6" />}
         />
-        <MetricsCard
+        {/* <MetricsCard
           title="Downloads"
           value={metrics.totalDownloads.toLocaleString()}
           subtitle="Arquivos baixados"
           trend={trends.totalDownloads.trend as "up" | "down"}
           trendValue={`${trends.totalDownloads.value} vs período anterior`}
           icon={<Download className="w-6 h-6" />}
-        />
+        /> */}
         <MetricsCard
           title="Economia de Tempo"
           value={`${metrics.timeSaved} min`}

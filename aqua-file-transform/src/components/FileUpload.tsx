@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, X, CheckCircle, Plus, FolderPlus, Send, Trash2, Settings, Download, MoreVertical, Loader2, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,12 +14,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { callDjangoBackend } from "@/lib/api";
 import { v4 as uuidv4} from "uuid";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
 
 
 
@@ -535,17 +537,27 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isExpanded = expandedQueueId === queue.id;
+    const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
     
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) {
+      console.log("Mudou input", e.target.files);
+        if (e.target.files && e.target.files.length > 0) {
         onFileSelect(queue.id, e.target.files);
+        // Resetar o input 
+        e.target.value = "";
+        
       }
     };
+
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setAttachedFiles(prev => [...prev, ...files]);
+  };
     
     const handleDrop = (e: React.DragEvent) => {
       e.preventDefault();
-      if (e.dataTransfer.files) {
-        onFileSelect(queue.id, e.dataTransfer.files);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          onFileSelect(queue.id, e.dataTransfer.files);
       }
     };
     
@@ -553,6 +565,11 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       e.preventDefault();
     };
     
+    // Função para lidar com o clique na área de upload
+    const handleUploadAreaClick = () => {
+      fileInputRef.current?.click();
+    };
+
     const toggleExpand = () => {
       setExpandedQueueId(isExpanded ? "" : queue.id);
     };
@@ -599,53 +616,6 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
               >
                 {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
-              
-              {/* <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {queue.status !== "processing" && (
-                    <>
-                      <DropdownMenuItem onClick={() => {
-                        setQueues(prev => prev.map(q => 
-                          q.id === queue.id 
-                            ? { ...q, files: [], status: "draft" }
-                            : q
-                        ));
-                        toast.success("Arquivos removidos da fila!");
-                      }}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Limpar arquivos
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {
-                        setQueues(prev => prev.filter(q => q.id !== queue.id));
-                        if (expandedQueueId === queue.id) {
-                          setExpandedQueueId("");
-                        }
-                        toast.success("Fila excluída!");
-                      }} className="text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Excluir cliente
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  {queue.status === "completed" && (
-                    <DropdownMenuItem onClick={() => {
-                      const conversionData = JSON.parse(localStorage.getItem(`conversionData_${queue.id}`) || '{}');
-                      if (conversionData.zipId) {
-                        const backendUrl = import.meta.env.VITE_DJANGO_BACKEND_URL;
-                        window.open(`${backendUrl}/api/download-zip/${conversionData.zipId}/`, "_blank");
-                      }
-                    }}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Baixar resultados
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu> */}
             </div>
           </div>
         </CardHeader>
@@ -685,15 +655,20 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
             </div>
           )}
           
-          {/* Área de upload de arquivos */}
           {queue.status === "draft" && (
-            <div
-              className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors hover:bg-muted/50"
-              onClick={() => fileInputRef.current?.click()}
+            <label
+              htmlFor={`file-upload-${queue.id}`}
+              className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors hover:bg-muted/50 flex flex-col items-center justify-center"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
+              <Upload className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">
+                Arraste arquivos PDF aqui ou clique para selecionar
+              </p>
+
               <input
+                id={`file-upload-${queue.id}`}
                 ref={fileInputRef}
                 type="file"
                 accept=".pdf"
@@ -701,13 +676,8 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <Upload className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Arraste arquivos PDF aqui ou clique para selecionar
-              </p>
-            </div>
+            </label>
           )}
-          
           {/* Lista de arquivos (versão compacta) */}
           {!isExpanded && queue.files.length > 0 && (
             <div className="space-y-2">
@@ -955,7 +925,9 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              {/* <DialogTitle>Criar Nova Fila de Conversão</DialogTitle> */}
+              <VisuallyHidden>
+                <DialogTitle>Criar Nova Fila de Conversão</DialogTitle>
+            </VisuallyHidden>
             </DialogHeader>
             <div className="space-y-4">
               <div>
