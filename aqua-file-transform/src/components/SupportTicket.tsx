@@ -61,6 +61,7 @@ const SupportTicket = () => {
        // ✅ Aguarde o retorno da Promise
       const newTicket = await createTicket({
         subject,
+        email,
         description,
         priority,
         attachments: attachedFiles,
@@ -77,6 +78,7 @@ const SupportTicket = () => {
         // Reset form
         setSubject("");
         setDescription("");
+        setEmail("");
         setPriority("media");
         setAttachedFiles([]);
         setOpen(false);
@@ -127,7 +129,7 @@ const SupportTicket = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subject">E-mail para resposta *</Label>
+            <Label htmlFor="email">E-mail para resposta *</Label>
             <Input
               id="email"
               placeholder="example@email.com"

@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 export interface Ticket {
   id: string;
   subject: string;
+  email: string;
   description: string;
   status: 'aberto' | 'em_andamento' | 'respondido' | 'fechado';
   priority: 'baixa' | 'media' | 'alta' | 'urgente';
@@ -27,6 +28,7 @@ export const useTickets = () => {
     {
       id: '1',
       subject: 'Erro na conversão de PDF',
+      email: 'exemplo@email.com',
       description: 'Estou tendo problemas para converter um arquivo PDF específico.',
       status: 'aberto',
       priority: 'alta',
@@ -37,6 +39,7 @@ export const useTickets = () => {
     {
       id: '2',
       subject: 'Dúvida sobre limites de upload',
+      email: 'exemplo@email.com',
       description: 'Qual é o tamanho máximo de arquivo que posso fazer upload?',
       status: 'respondido',
       priority: 'media',
@@ -58,6 +61,7 @@ export const useTickets = () => {
   async (ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'status'> & { attachments?: File[] }) => {
     const formData = new FormData();
     formData.append('subject', ticketData.subject);
+    formData.append('email', ticketData.email);
     formData.append('description', ticketData.description);
     formData.append('priority', ticketData.priority);
     

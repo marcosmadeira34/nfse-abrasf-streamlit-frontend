@@ -656,67 +656,71 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
           )}
           
           {queue.status === "draft" && (
-            <label
-              htmlFor={`file-upload-${queue.id}`}
-              className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors hover:bg-muted/50 flex flex-col items-center justify-center"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
-              <Upload className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Arraste arquivos PDF aqui ou clique para selecionar
-              </p>
+          <div className="space-y-2">
+            <Label htmlFor={`file-upload-${queue.id}`}>Adicionar arquivos</Label>
+            <div className="flex items-center justify-center w-full">
+              <label
+                htmlFor={`file-upload-${queue.id}`}
+                className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+              >
+                <div className="flex flex-col items-center justify-center pt-2 pb-3">
+                  <Upload className="w-6 h-6 mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Clique para anexar arquivos ou arraste PDFs aqui
+                  </p>
+                </div>
 
-              <input
-                id={`file-upload-${queue.id}`}
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                multiple
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </label>
-          )}
+                <input
+                  id={`file-upload-${queue.id}`}
+                  type="file"
+                  accept=".pdf"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      // junta com os arquivos existentes
+                      onFileSelect(queue.id, e.target.files);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          
           {/* Lista de arquivos (versão compacta) */}
-          {!isExpanded && queue.files.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">
-                  {queue.files.length} arquivo(s)
-                </span>
-                {queue.status === "processing" && (
-                  <span className="text-xs text-muted-foreground">
-                    {queue.files.filter(f => f.status === "completed").length} de {queue.files.length} concluídos
-                  </span>
-                )}
-              </div>
-              
-              <div className="max-h-32 overflow-y-auto space-y-1">
-                {queue.files.slice(0, 3).map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
-                    <div className="flex items-center gap-2 truncate">
-                      <FileText className="h-4 w-4 text-primary flex-shrink-0" />
-                      <span className="truncate">{file.name}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {file.status === "completed" && (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      )}
-                      {file.status === "processing" && (
-                        <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                      )}
-                    </div>
+          {queue.files.length > 0 && (
+            <div className="space-y-2 mt-2">
+              <p className="text-sm font-medium">Arquivos anexados:</p>
+              {queue.files.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-2 bg-muted rounded-lg"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm truncate max-w-[250px]">{file.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
                   </div>
-                ))}
-                {queue.files.length > 3 && (
-                  <div className="text-center text-xs text-muted-foreground py-1">
-                    +{queue.files.length - 3} mais arquivos
-                  </div>
-                )}
-              </div>
+                  {queue.status === "draft" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        setFileToRemove({ queueId: queue.id, fileId: file.id })
+                      }
+                    >
+                      <X className="w-4 h-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
+        </div>
+      )}
           
           {/* Ações principais */}
           <div className="flex gap-2 pt-2">
@@ -823,7 +827,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
               {/* Lista completa de arquivos */}
               {queue.files.length > 0 && (
                 <div>
-                  <h4 className="font-medium mb-2">Arquivos na Fila</h4>
+                  <h4 className="font-medium mb-2">Arquivos Incluídos</h4>
                   <div className="border rounded-lg max-h-60 overflow-y-auto">
                     {queue.files.map((file) => (
                       <div key={file.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
