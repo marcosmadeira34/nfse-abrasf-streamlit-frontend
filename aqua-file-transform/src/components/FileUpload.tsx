@@ -57,6 +57,7 @@ interface ActiveTask {
   timestamp: string;
 }
 
+
 const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   const [queues, setQueues] = useState<ConversionQueue[]>([]);
   const [expandedQueueId, setExpandedQueueId] = useState<string>("");
@@ -66,7 +67,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
   const [fileToRemove, setFileToRemove] = useState<{ queueId: string; fileId: string } | null>(null);
   const [activeTasks, setActiveTasks] = useState<ActiveTask[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
-
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   // Atualizar o tempo atual a cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
@@ -75,6 +76,19 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     
     return () => clearInterval(interval);
   }, []);
+  
+  interface FileItem {
+    id: string;
+    name: string;
+    size: number;
+    file: File;
+  }
+
+  interface Queue {
+    status: "draft" | "sent";
+    files: FileItem[];
+    id: string;
+  }
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -530,200 +544,194 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
   }, [activeTasks]);
 
-  // Componente para cada card de fila
-  const QueueCard = ({ queue, onFileSelect }: { 
-    queue: ConversionQueue; 
-    onFileSelect: (queueId: string, files: FileList) => void 
-  }) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const isExpanded = expandedQueueId === queue.id;
-    const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-    
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("Mudou input", e.target.files);
-        if (e.target.files && e.target.files.length > 0) {
-        onFileSelect(queue.id, e.target.files);
-        // Resetar o input 
-        e.target.value = "";
-        
-      }
-    };
-
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    setAttachedFiles(prev => [...prev, ...files]);
+  const QueueCard = ({queue, onFileSelect}: {queue: ConversionQueue; onFileSelect: (queueId: string, files: FileList | File[]) => void;
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const isExpanded = expandedQueueId === queue.id;
+  
+  // Função para disparar clique no input
+  const handleUploadAreaClick = () => {
+    fileInputRef.current?.click();
   };
-    
-    const handleDrop = (e: React.DragEvent) => {
-      e.preventDefault();
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-          onFileSelect(queue.id, e.dataTransfer.files);
-      }
-    };
-    
-    const handleDragOver = (e: React.DragEvent) => {
-      e.preventDefault();
-    };
-    
-    // Função para lidar com o clique na área de upload
-    const handleUploadAreaClick = () => {
-      fileInputRef.current?.click();
-    };
 
-    const toggleExpand = () => {
-      setExpandedQueueId(isExpanded ? "" : queue.id);
-    };
-    
+  // Função para lidar com seleção de arquivos
+  const handleFiles = (files: FileList | File[]) => {
+    const currentQueue = queues.find(q => q.id === queue.id);
+    const existingCount = currentQueue?.files.length || 0;
+
+    // Limita a 100 arquivos por fila
+    const filesArray = Array.from(files);
+    const allowedFiles = filesArray.slice(0, Math.max(0, 100 - existingCount));
+
+    if (filesArray.length > allowedFiles.length) {
+      toast.error("Você só pode adicionar até 100 arquivos por fila. Apenas os primeiros serão aceitos.");
+    }
+
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    allowedFiles.forEach(file => {
+      if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+        validFiles.push(file);
+      } else {
+        invalidFiles.push(file.name);
+      }
+    });
+
+    if (invalidFiles.length) {
+      toast.error(`Arquivos inválidos: ${invalidFiles.join(", ")}. Apenas PDFs são permitidos.`);
+    }
+
+    if (validFiles.length > 0) {
+      onFileSelect(queue.id, validFiles);
+    }
+  };
+
+  // Input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    handleFiles(e.target.files);
+    e.target.value = ""; // reset para permitir mesmo arquivo novamente
+  };
+
+  // Drag & Drop
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const currentQueue = queues.find(q => q.id === queue.id);
+      const existingCount = currentQueue?.files.length || 0;
+      const filesArray = Array.from(e.dataTransfer.files);
+      const allowedFiles = filesArray.slice(0, Math.max(0, 100 - existingCount));
+
+      if (filesArray.length > allowedFiles.length) {
+        toast.error("Você só pode adicionar até 100 arquivos por fila. Apenas os primeiros serão aceitos.");
+      }
+
+      if (allowedFiles.length > 0) {
+        handleFiles(allowedFiles);
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+  };
+
+  const toggleExpand = () => {
+    setExpandedQueueId(isExpanded ? "" : queue.id);
+  };
+
     // Encontrar o arquivo atualmente sendo processado
     const processingFile = queue.files.find(file => file.status === "processing");
     
     return (
-      <Card className={cn(
-        "transition-all hover:shadow-md",
-        isExpanded ? "ring-2 ring-primary" : ""
-      )}>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <CardTitle className="text-lg flex items-center gap-2 text-green-500">
-                {queue.name}
-                <Badge variant={
-                  queue.status === "draft" ? "outline" : 
-                  queue.status === "processing" ? "secondary" :
-                  queue.status === "error" ? "destructive" : "default"
-                }>
-                  {queue.status === "draft" ? "Não iniciado" :
-                   queue.status === "processing" ? (
-                     <div className="flex items-center gap-1">
-                       <Loader2 className="h-5 w-5 animate-spin text-green-500" />
-                       Processando
-                     </div>
-                   ) : 
-                   queue.status === "error" ? "Erro" : "Concluído"}
-                </Badge>
-              </CardTitle>
-              {queue.description && (
-                <p className="text-sm text-muted-foreground mt-1">{queue.description}</p>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 p-0"
-                onClick={toggleExpand}
+    <Card className={cn("transition-all hover:shadow-md", isExpanded ? "ring-2 ring-primary" : "")}>
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <CardTitle className="text-lg flex items-center gap-2 text-green-500">
+              {queue.name}
+              <Badge
+                variant={
+                  queue.status === "draft"
+                    ? "outline"
+                    : queue.status === "processing"
+                    ? "secondary"
+                    : queue.status === "error"
+                    ? "destructive"
+                    : "default"
+                }
               >
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-            </div>
+                {queue.status === "draft"
+                  ? "Não iniciado"
+                  : queue.status === "processing"
+                  ? "Processando"
+                  : queue.status === "error"
+                  ? "Erro"
+                  : "Concluído"}
+              </Badge>
+            </CardTitle>
+            {queue.description && (
+              <p className="text-sm text-muted-foreground mt-1">{queue.description}</p>
+            )}
           </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {/* Barra de status de conversão */}
-          {queue.status === "processing" && (
-            <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                  <span className="font-medium text-blue-800">Processando arquivos...</span>
-                </div>
-                <span className="text-sm font-medium text-blue-700">
-                  {queue.files.filter(f => f.status === "completed").length} de {queue.files.length}
-                </span>
-              </div>
-              <Progress 
-                value={
-                  (queue.files.filter(f => f.status === "completed").length / queue.files.length) * 100
-                } 
-                className="h-2" 
-              />
-              {processingFile && (
-                <div className="flex items-center text-sm text-blue-700 bg-blue-100 p-2 rounded">
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  <span className="truncate">Convertendo: {processingFile.name}</span>
-                </div>
-              )}
-              {/* Cronômetro */}
-              {queue.processingStartTime && (
-                <div className="flex items-center text-sm text-blue-700 bg-blue-100 p-2 rounded">
-                  <Clock className="h-3 w-3 mr-1" />
-                  <span>Tempo decorrido: {getElapsedTime(queue.processingStartTime)}</span>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {queue.status === "draft" && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => setExpandedQueueId(isExpanded ? "" : queue.id)}
+          >
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {queue.status === "draft" && (
           <div className="space-y-2">
-            <Label htmlFor={`file-upload-${queue.id}`}>Adicionar arquivos</Label>
+            {/* <Label htmlFor={`attachments-${queue.id}`}>Adicionar arquivos</Label> */}
             <div className="flex items-center justify-center w-full">
               <label
-                htmlFor={`file-upload-${queue.id}`}
+                htmlFor={`attachments-${queue.id}`}
                 className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors"
+                onClick={handleUploadAreaClick}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
               >
-                <div className="flex flex-col items-center justify-center pt-2 pb-3">
-                  <Upload className="w-6 h-6 mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Clique para anexar arquivos ou arraste PDFs aqui
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="mb-3 w-8 h-8 text-muted-foreground" />
+                  <p className="mb-2 text-sm text-center text-muted-foreground">
+                    Clique ou arraste e solte arquivos PDF aqui
                   </p>
+                  <p className="text-xs text-muted-foreground">Somente PDFs são permitidos</p>
                 </div>
-
                 <input
-                  id={`file-upload-${queue.id}`}
+                  id={`attachments-${queue.id}`}
+                  ref={fileInputRef}
                   type="file"
-                  accept=".pdf"
                   multiple
+                  onChange={handleInputChange}
                   className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      // junta com os arquivos existentes
-                      onFileSelect(queue.id, e.target.files);
-                    }
-                  }}
+                  accept=".pdf,application/pdf"
                 />
               </label>
-            </div>
-          
-          {/* Lista de arquivos (versão compacta) */}
-          {queue.files.length > 0 && (
-            <div className="space-y-2 mt-2">
-              <p className="text-sm font-medium">Arquivos anexados:</p>
-              {queue.files.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center justify-between p-2 bg-muted rounded-lg"
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm truncate max-w-[250px]">{file.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                    </span>
-                  </div>
-                  {queue.status === "draft" && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        setFileToRemove({ queueId: queue.id, fileId: file.id })
-                      }
-                    >
-                      <X className="w-4 h-4 text-destructive" />
-                    </Button>
-                  )}
+            </div>''''
+          </div>
+        )}
+
+        {/* Lista de arquivos */}
+        {/* {queue.files.length > 0 && (
+          <div className="space-y-2 mt-2">
+            <p className="text-sm font-medium">Arquivos anexados:</p>
+            {queue.files.map(file => (
+              <div key={file.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm truncate max-w-[250px]">{file.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-          
-          {/* Ações principais */}
-          <div className="flex gap-2 pt-2">
+                {queue.status === "draft" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setFileToRemove({ queueId: queue.id, fileId: file.id })}
+                  >
+                    <X className="w-4 h-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        )} */}
+
+        {/* Ações principais */}
+        <div className="flex gap-2 pt-2">
             {queue.status === "draft" && queue.files.length > 0 && (
               <Button 
                 onClick={() => startConversion(queue.id)}
@@ -965,7 +973,7 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       
       {/* Lista de Filas */}
       {queues.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {queues.map((queue) => (
             <QueueCard 
               key={queue.id} 
