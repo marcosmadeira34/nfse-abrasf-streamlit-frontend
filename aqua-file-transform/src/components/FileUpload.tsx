@@ -559,12 +559,12 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
     const currentQueue = queues.find(q => q.id === queue.id);
     const existingCount = currentQueue?.files.length || 0;
 
-    // Limita a 100 arquivos por fila
+    // Limita a 50 arquivos por fila
     const filesArray = Array.from(files);
-    const allowedFiles = filesArray.slice(0, Math.max(0, 100 - existingCount));
+    const allowedFiles = filesArray.slice(0, Math.max(0, 50 - existingCount));
 
     if (filesArray.length > allowedFiles.length) {
-      toast.error("Você só pode adicionar até 100 arquivos por fila. Apenas os primeiros serão aceitos.");
+      toast.error("Você só pode adicionar até 50 arquivos por fila. Apenas os primeiros serão aceitos.");
     }
 
     const validFiles: File[] = [];
@@ -601,10 +601,10 @@ const FileUpload = ({ onQueueComplete }: FileUploadProps) => {
       const currentQueue = queues.find(q => q.id === queue.id);
       const existingCount = currentQueue?.files.length || 0;
       const filesArray = Array.from(e.dataTransfer.files);
-      const allowedFiles = filesArray.slice(0, Math.max(0, 100 - existingCount));
+      const allowedFiles = filesArray.slice(0, Math.max(0, 50 - existingCount));
 
       if (filesArray.length > allowedFiles.length) {
-        toast.error("Você só pode adicionar até 100 arquivos por fila. Apenas os primeiros serão aceitos.");
+        toast.error("Você só pode adicionar até 50 arquivos por fila. Apenas os primeiros serão aceitos.");
       }
 
       if (allowedFiles.length > 0) {
